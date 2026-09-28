@@ -1738,14 +1738,14 @@ const loanMatrix = {
       { id: 'petty', label: 'Petty Loan', rates: { 1: 5 }, max: 150000 },
       { id: 'subsistence', label: 'Subsistence Loan', rates: { 1: 12, 2: 12 }, max: 100000 }
     ],
-    special: [
-      { id: 'anniversary', label: 'Anniversary Loan', monthlyRate: 1, max: 10000 },
-      { id: 'cashGift', label: 'Cash Gift', monthlyRate: 1, max: 10000 },
-      { id: 'economicAssistance1', label: 'Emergency Economic Assistance 1', monthlyRate: 1 },
-      { id: 'economicAssistance2', label: 'Emergency Economic Assistance 2', monthlyRate: 1 },
-      { id: 'midYearBonus', label: 'Mid Year Bonus', monthlyRate: 1 },
-      { id: 'yearEndBonus', label: 'Year End Bonus', monthlyRate: 1 }
-    ],
+    //special: [
+     // { id: 'anniversary', label: 'Anniversary Loan', monthlyRate: 1, max: 10000 },
+     // { id: 'cashGift', label: 'Cash Gift', monthlyRate: 1, max: 10000 },
+     /// { id: 'economicAssistance1', label: 'Emergency Economic Assistance 1', monthlyRate: 1 },
+      ///{ id: 'economicAssistance2', label: 'Emergency Economic Assistance 2', monthlyRate: 1 },
+      ///{ id: 'midYearBonus', label: 'Mid Year Bonus', monthlyRate: 1 },
+      //{ id: 'yearEndBonus', label: 'Year End Bonus', monthlyRate: 1 }
+    //],
     occasional: [
       { id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
       { id: 'calamity-2 Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
@@ -1769,14 +1769,14 @@ const loanMatrix = {
       { id: 'multiPurpose', label: 'Multi-Purpose Loan', rates: { 1: 12, 2: 12, 3: 15 }, max: 100000 },
       { id: 'salary', label: 'Salary Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } }
     ],
-    special: [
-      { id: 'anniversary', label: 'Anniversary Loan', monthlyRate: 1, max: 10000 },
-      { id: 'cashGift', label: 'Cash Gift', monthlyRate: 1, max: 10000 },
-      { id: 'economicAssistance1', label: 'Emergency Economic Assistance 1', monthlyRate: 1 },
-      { id: 'economicAssistance2', label: 'Emergency Economic Assistance 2', monthlyRate: 1 },
-      { id: 'midYearBonus', label: 'Mid Year Bonus', monthlyRate: 1 },
-      { id: 'yearEnd', label: 'Year End', monthlyRate: 1 }
-    ],
+    //special: [
+    // { id: 'anniversary', label: 'Anniversary Loan', monthlyRate: 1, max: 10000 },
+      //{ id: 'cashGift', label: 'Cash Gift', monthlyRate: 1, max: 10000 },
+      //{ id: 'economicAssistance1', label: 'Emergency Economic Assistance 1', monthlyRate: 1 },
+      //{ id: 'economicAssistance2', label: 'Emergency Economic Assistance 2', monthlyRate: 1 },
+      //{ id: 'midYearBonus', label: 'Mid Year Bonus', monthlyRate: 1 },
+      //{ id: 'yearEnd', label: 'Year End', monthlyRate: 1 }
+    //],
     occasional: [
       { id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
       { id: 'calamity2Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
@@ -2000,7 +2000,7 @@ function getLoanDefinition(court, loanType) {
 function getLoanTypeOptions(court) {
   const categoryLabels = {
     regular: 'Regular Loans',
-    special: 'Special Loans (1% per month)',
+    //special: 'Special Loans (1% per month)',
     occasional: 'Occasional Loans'
   };
 
