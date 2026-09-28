@@ -1899,7 +1899,7 @@ function createCalculatorModal() {
 
         <div class="calculator-result" data-supreme-result>
           <strong>Loan Amortization</strong>
-          <span>Your eligible loan amount appears here.</span>
+          <span>Your calculated monthly amortization appears here.</span>
         </div>
 
         <div class="calculator-disclaimer">
@@ -1962,7 +1962,7 @@ function createCalculatorModal() {
 
         <div class="calculator-result calculator-result-muted" data-lower-result>
           <strong>Loan Amortization</strong>
-          <span>Your eligible loan amount appears here.</span>
+          <span>Your calculated monthly amortization appears here.</span>
         </div>
 
         <div class="calculator-disclaimer">
@@ -2048,6 +2048,43 @@ function updateEligibleTakeHomePay(court) {
   elements.eligibleTakeHomePay.value = Number.isFinite(takeHomePay) && takeHomePay > 0
     ? formatCurrency(getEligibleMonthlyAmortization(takeHomePay))
     : '';
+}
+
+// Shows the Maximum Eligible Loan Amount as soon as the current take-home pay
+// is typed, so the member never has to press Compute just to see it. The
+// Compute button still performs the full amortization computation.
+function updateMaximumEligibleLoanAmount(court) {
+  const elements = getLoanElements(court);
+  if (!elements.loanAmount || !elements.loanType || !elements.loanTerm || !elements.takeHomePay) return;
+
+  const loan = getLoanDefinition(court, elements.loanType.value);
+  const termYears = Number(elements.loanTerm.value);
+  const takeHomePay = parseAmountInput(elements.takeHomePay.value);
+  const rate = loan?.rates?.[termYears];
+
+  if (!loan || typeof loan.monthlyRate === 'number' || typeof rate !== 'number' || !Number.isFinite(takeHomePay) || takeHomePay <= 0) {
+    clearCalculatedLoanAmount(court);
+    return;
+  }
+
+  const eligibleMonthlyAmortization = getEligibleMonthlyAmortization(takeHomePay);
+  if (eligibleMonthlyAmortization <= 0) {
+    clearCalculatedLoanAmount(court);
+    return;
+  }
+
+  const calculatedLoanAmount = eligibleMonthlyAmortization / getFactorRate(rate / 100, termYears);
+
+  if (typeof loan.min === 'number' && calculatedLoanAmount < loan.min) {
+    clearCalculatedLoanAmount(court);
+    return;
+  }
+
+  const eligibleLoanAmount = typeof loan.max === 'number'
+    ? Math.min(calculatedLoanAmount, loan.max)
+    : calculatedLoanAmount;
+
+  elements.loanAmount.value = formatCurrency(eligibleLoanAmount);
 }
 
 function updateLoanTerms(court, loanType) {
@@ -2327,13 +2364,13 @@ document.addEventListener('input', (event) => {
   if (event.target?.matches?.('[data-take-home-pay]')) {
     event.target.value = formatAmountInput(event.target.value);
     updateEligibleTakeHomePay('supreme');
-    clearCalculatedLoanAmount('supreme');
+    updateMaximumEligibleLoanAmount('supreme');
   }
 
   if (event.target?.matches?.('[data-take-home-pay-lower]')) {
     event.target.value = formatAmountInput(event.target.value);
     updateEligibleTakeHomePay('lower');
-    clearCalculatedLoanAmount('lower');
+    updateMaximumEligibleLoanAmount('lower');
   }
 
   if (event.target?.matches?.('[data-desired-loan-amount], [data-desired-loan-amount-lower]')) {
@@ -2350,12 +2387,20 @@ document.addEventListener('blur', (event) => {
 document.addEventListener('change', (event) => {
   if (event.target?.matches?.('[data-loan-type]')) {
     updateLoanTerms('supreme', event.target.value);
-    clearCalculatedLoanAmount('supreme');
+    updateMaximumEligibleLoanAmount('supreme');
   }
 
   if (event.target?.matches?.('[data-loan-type-lower]')) {
     updateLoanTerms('lower', event.target.value);
-    clearCalculatedLoanAmount('lower');
+    updateMaximumEligibleLoanAmount('lower');
+  }
+
+  if (event.target?.matches?.('[data-loan-term]')) {
+    updateMaximumEligibleLoanAmount('supreme');
+  }
+
+  if (event.target?.matches?.('[data-loan-term-lower]')) {
+    updateMaximumEligibleLoanAmount('lower');
   }
 });
 
