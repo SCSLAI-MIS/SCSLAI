@@ -2208,6 +2208,7 @@ function computeLoan(court) {
 
   if (!loan) {
     clearCalculatedLoanAmount(court);
+    elements.result.classList.add('error-result');
     elements.result.innerHTML = '<strong>Loan Eligibility</strong><span>The selected loan type is not available in the updated matrix.</span>';
     return;
   }
@@ -2224,6 +2225,7 @@ function computeLoan(court) {
 
   if (typeof loan.monthlyRate === 'number') {
     clearCalculatedLoanAmount(court);
+    elements.result.classList.add('error-result');
     elements.result.innerHTML = `<strong>Loan Eligibility</strong><span>${loan.label} has a 1% monthly interest rate in the updated matrix, but no repayment term is listed. An eligible loan amount cannot be calculated.</span>`;
     return;
   }
@@ -2232,6 +2234,7 @@ function computeLoan(court) {
 
   if (typeof rate !== 'number') {
     clearCalculatedLoanAmount(court);
+    elements.result.classList.add('error-result');
     elements.result.innerHTML = '<strong>Loan Eligibility</strong><span>The selected term is not available for this loan type.</span>';
     return;
   }
@@ -2256,6 +2259,7 @@ function computeLoan(court) {
   const calculatedLoanAmount = eligibleMonthlyAmortization / factorRate;
   if (typeof loan.min === 'number' && calculatedLoanAmount < loan.min) {
     clearCalculatedLoanAmount(court);
+    elements.result.classList.add('error-result');
     elements.result.innerHTML = `<strong>Loan Eligibility</strong><span>The income-based amount is below this loan type's matrix minimum of ${formatCurrency(loan.min)}.</span>`;
     return;
   }
@@ -2269,12 +2273,14 @@ function computeLoan(court) {
   if (Number.isFinite(desiredLoanAmountInput)) {
     if (desiredLoanAmountInput <= 0) {
       clearCalculatedLoanAmount(court);
+      elements.result.classList.add('error-result');
       elements.result.innerHTML = '<strong>Loan Eligibility</strong><span>Please enter a valid desired loan amount.</span>';
       return;
     }
 
     if (typeof loan.min === 'number' && desiredLoanAmountInput < loan.min) {
       clearCalculatedLoanAmount(court);
+      elements.result.classList.add('error-result');
       elements.result.innerHTML = `<strong>Loan Eligibility</strong><span>Desired amount is below this loan type\'s matrix minimum of ${formatCurrency(loan.min)}.</span>`;
       return;
     }
@@ -2308,6 +2314,7 @@ function computeLoan(court) {
 
   elements.loanAmount.value = formatCurrency(eligibleLoanAmount);
 
+  elements.result.classList.remove('error-result');
   elements.result.innerHTML = `
     <strong>Loan Amortization</strong>
     <span>Monthly amortization: ${formatCurrency(monthlyAmortization)}</span>
