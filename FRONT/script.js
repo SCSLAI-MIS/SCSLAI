@@ -1734,7 +1734,7 @@ const loanMatrix = {
       { id: 'meal', label: 'MEAL', rates: { 2: 8, 3: 10 }, min: 50000, max: 300000 },
       { id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
       { id: 'multiPurpose', label: 'Multi-Purpose Loan', rates: { 1: 12, 2: 12, 3: 15 }, max: 100000 },
-      { id: 'motorcycle', label: 'Motorcycle Loan', rates: { 4: 18, 5: 18 } },
+      //{ id: 'motorcycle', label: 'Motorcycle Loan', rates: { 4: 18, 5: 18 } },
       { id: 'petty', label: 'Petty Loan', rates: { 1: 5 }, max: 150000 },
       { id: 'subsistence', label: 'Subsistence Loan', rates: { 1: 12, 2: 12 }, max: 100000 }
     ],
