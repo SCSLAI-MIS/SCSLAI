@@ -154,7 +154,8 @@ const yearbookData = [
 function preloadBasePages() {
   if (preloadPromise) return preloadPromise;
 
-  // Combine all image sources for preloading
+  // Combine all image sources for preloading hahaha
+
   const sourcesToPreload = [
     ...pages2022, 
     ...pages2024, 
