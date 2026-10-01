@@ -27,6 +27,8 @@ hasPage2:false, hasCheckboxes:false, useUppercase:true,
 mobileField:"mobileNumber",
 pdfPrefix:"LC-Membership-Application-",
 pdfSuffix:"Form",
+/* 2x2 photo box (top-right "Attach Recent Photo"). Adjust x/y/w/h to match scan. */
+photo:{x:1800,y:95,w:598,h:600},
 images:[
 "FORMS/LOWER COURT MEMBERSHIP APPLICATION FORM 01.png"
 ],

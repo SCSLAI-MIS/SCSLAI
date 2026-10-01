@@ -15,7 +15,8 @@
 
     var currentValues = {};
     var currentSelections = {};
-
+    var currentPhotoDataUrl = "";
+    var currentPhotoName = "";
 
     /* =========================================================
        REGISTER FORM CONFIGURATION
@@ -36,6 +37,201 @@
 
         return configs[active] || {};
 
+    }
+
+
+    function getPhotoBox() {
+
+        var c = cfg() || {};
+        var p = c.photo || null;
+
+        if (!p) { return null; }
+
+        var w = Number(p.w) || 0;
+        var h = Number(p.h) || 0;
+
+        if (!w || !h) { return null; }
+
+        return {
+            x: Number(p.x) || 0,
+            y: Number(p.y) || 0,
+            w: w,
+            h: h
+        };
+
+    }
+
+
+    function hasPhotoBox() { return !!getPhotoBox(); }
+
+
+    function readPhotoFile(file) {
+
+        if (!file || !(/^image\//).test(file.type || "")) {
+            alert("Please choose an image file (JPG or PNG).");
+            return;
+        }
+
+        if (file.size > 12 * 1024 * 1024) {
+            alert("That picture is too large. Please choose a file below 12MB.");
+            return;
+        }
+
+        var reader = new FileReader();
+
+        reader.onload = function () {
+            var raw = String(reader.result || "");
+            if (!raw) { return; }
+            var img = new Image();
+            img.onload = function () {
+                try {
+                    var maxSide = 900;
+                    var iw = img.naturalWidth || 1;
+                    var ih = img.naturalHeight || 1;
+                    var scale = Math.min(1, maxSide / Math.max(iw, ih));
+                    var cw = Math.max(1, Math.round(iw * scale));
+                    var ch = Math.max(1, Math.round(ih * scale));
+                    var cv = document.createElement("canvas");
+                    cv.width = cw;
+                    cv.height = ch;
+                    var cx = cv.getContext("2d");
+                    cx.fillStyle = "#ffffff";
+                    cx.fillRect(0, 0, cw, ch);
+                    cx.drawImage(img, 0, 0, cw, ch);
+                    currentPhotoDataUrl = cv.toDataURL("image/jpeg", 0.85);
+                    currentPhotoName = file.name || "photo.jpg";
+                    refreshPhotoWidgets();
+                } catch (err) {
+                    console.error("Photo processing error:", err);
+                    alert("That picture could not be read. Please try another file.");
+                }
+            };
+            img.onerror = function () {
+                alert("That picture could not be read. Please try another file.");
+            };
+            img.src = raw;
+        };
+
+        reader.onerror = function () {
+            alert("That picture could not be read. Please try again.");
+        };
+
+        reader.readAsDataURL(file);
+
+    }
+
+
+    function clearPhoto() {
+        currentPhotoDataUrl = "";
+        currentPhotoName = "";
+        refreshPhotoWidgets();
+    }
+
+
+    function refreshPhotoWidgets() {
+        Array.prototype.forEach.call(
+            document.querySelectorAll(".form-photo-widget"),
+            function (widget) {
+                var img = widget.querySelector(".form-photo-preview-img");
+                var nm = widget.querySelector(".form-photo-name");
+                var empty = widget.querySelector(".form-photo-empty");
+                var rm = widget.querySelector("[data-photo-remove]");
+                var hasPhoto = !!currentPhotoDataUrl;
+                if (img) {
+                    if (hasPhoto) { img.src = currentPhotoDataUrl; }
+                    img.style.display = hasPhoto ? "block" : "none";
+                }
+                if (empty) { empty.style.display = hasPhoto ? "none" : "flex"; }
+                if (nm) { nm.textContent = hasPhoto ? (currentPhotoName || "Attached photo") : ""; }
+                if (rm) { rm.style.display = hasPhoto ? "inline-block" : "none"; }
+                widget.classList.toggle("has-photo", hasPhoto);
+            }
+        );
+        Array.prototype.forEach.call(
+            document.querySelectorAll('input[data-photo-input="1"]'),
+            function (input) {
+                if (!currentPhotoDataUrl) {
+                    try { input.value = ""; } catch (e) {}
+                }
+            }
+        );
+        Array.prototype.forEach.call(
+            document.querySelectorAll(".preview-photo-img"),
+            function (img) {
+                if (currentPhotoDataUrl) {
+                    img.src = currentPhotoDataUrl;
+                    img.style.display = "block";
+                } else {
+                    img.removeAttribute("src");
+                    img.style.display = "none";
+                }
+            }
+        );
+        Array.prototype.forEach.call(
+            document.querySelectorAll(".preview-photo-empty"),
+            function (empty) {
+                empty.style.display = currentPhotoDataUrl ? "none" : "flex";
+            }
+        );
+    }
+
+
+    function wirePhotoWidget(widget) {
+        if (!widget || widget.dataset.photoWired === "1") { return; }
+        widget.dataset.photoWired = "1";
+        var input = widget.querySelector('input[data-photo-input="1"]');
+        var browse = widget.querySelector("[data-photo-browse]");
+        var rm = widget.querySelector("[data-photo-remove]");
+        if (browse && input) {
+            browse.addEventListener("click", function () { input.click(); });
+        }
+        if (input) {
+            input.addEventListener("change", function () {
+                var file = (input.files && input.files[0]) || null;
+                if (file) { readPhotoFile(file); }
+                try { input.value = ""; } catch (e) {}
+            });
+        }
+        if (rm) {
+            rm.addEventListener("click", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                clearPhoto();
+            });
+        }
+    }
+
+
+    function photoWidgetHTML(extraClass) {
+        var cls = "form-photo-widget" + (extraClass ? " " + extraClass : "");
+        return (
+            '<div class="' + cls + '">' +
+                '<div class="form-photo-frame">' +
+                    '<div class="form-photo-empty">' +
+                        '<span class="form-photo-icon">+</span>' +
+                        '<span class="form-photo-empty-title">Attach Recent Photo</span>' +
+                        '<span class="form-photo-empty-sub">2x2 &bull; JPG / PNG</span>' +
+                    '</div>' +
+                    '<img class="form-photo-preview-img" alt="Attached 2x2 photo" style="display:none;">' +
+                '</div>' +
+                '<div class="form-photo-controls">' +
+                    '<input type="file" data-photo-input="1" accept="image/*" style="display:none;">' +
+                    '<button type="button" class="form-photo-btn" data-photo-browse>Upload Photo</button>' +
+                    '<button type="button" class="form-photo-btn form-photo-remove" data-photo-remove style="display:none;">Remove</button>' +
+                '</div>' +
+                '<div class="form-photo-name"></div>' +
+            '</div>'
+        );
+    }
+
+
+    function wireAllPhotoWidgets(root) {
+        var scope = root || document;
+        Array.prototype.forEach.call(
+            scope.querySelectorAll(".form-photo-widget"),
+            function (widget) { wirePhotoWidget(widget); }
+        );
+        refreshPhotoWidgets();
     }
 
 
@@ -83,6 +279,9 @@
                         currentValues = {};
 
                         currentSelections = {};
+
+                        currentPhotoDataUrl = "";
+                        currentPhotoName = "";
 
 
                         openModal();
@@ -1920,6 +2119,25 @@
                             n - 1
                         ] || "";
 
+                    var photoSlotHtml = "";
+
+                    if (!isP2 && hasPhotoBox()) {
+                        var pb = getPhotoBox();
+                        var pLeft = (Number(pb.x) / dims.w) * 100;
+                        var pTop = (Number(pb.y) / dims.h) * 100;
+                        var pW = (Number(pb.w) / dims.w) * 100;
+                        var pH = (Number(pb.h) / dims.h) * 100;
+                        photoSlotHtml =
+                            '<div class="form-photo-canvas-slot" ' +
+                                'style="position:absolute;' +
+                                'left:' + pLeft + '%;' +
+                                'top:' + pTop + '%;' +
+                                'width:' + pW + '%;' +
+                                'height:' + pH + '%;' +
+                                'z-index:6;">' +
+                                photoWidgetHTML("form-photo-canvas") +
+                            '</div>';
+                    }
 
                     desktopHtml +=
 
@@ -1938,6 +2156,8 @@
                                     escapeHTML(imageSrc) +
                                     '" class="loan-form-background"' +
                                     ' alt="Form page ' + n + '">' +
+
+                                photoSlotHtml +
 
                             '</div>' +
 
@@ -1983,6 +2203,16 @@
                 html +=
 
                     '<div class="loan-form-page">' +
+
+
+                        (
+                            !isP2 &&
+                            hasPhotoBox()
+
+                                ? photoWidgetHTML("form-photo-stacked")
+
+                                : ""
+                        ) +
 
 
                         (
@@ -2064,6 +2294,8 @@
         form.innerHTML =
             html;
 
+
+        wireAllPhotoWidgets(form);
 
         /* =================================================
            DESKTOP: POSITION INPUTS ON THE FORM IMAGE
@@ -2588,6 +2820,44 @@
     SHOW PREVIEW
     ========================================================= */
 
+    function previewPhotoHTML(pbox, dims, fit) {
+        var pLeft = (Number(pbox.x) / dims.w) * 100;
+        var pTop = (Number(pbox.y) / dims.h) * 100;
+        var pW = (Number(pbox.w) / dims.w) * 100;
+        var pH = (Number(pbox.h) / dims.h) * 100;
+        var emptyFs = 13 * (Number(fit) || 1);
+        return (
+            '<div class="preview-photo" ' +
+                'style="' +
+                    'position:absolute;' +
+                    'left:' + pLeft + '%;' +
+                    'top:' + pTop + '%;' +
+                    'width:' + pW + '%;' +
+                    'height:' + pH + '%;' +
+                    'overflow:hidden;' +
+                    'background:#ffffff;' +
+                    'border:1px solid #999;' +
+                    'z-index:2;' +
+                '">' +
+                '<div class="preview-photo-empty" ' +
+                    'style="display:flex;' +
+                    'width:100%;height:100%;' +
+                    'align-items:center;justify-content:center;' +
+                    'font-size:' + emptyFs + 'px;' +
+                    'color:#666;text-align:center;' +
+                    'font-family:Arial,sans-serif;">' +
+                    'Attach Recent Photo (2x2)' +
+                '</div>' +
+                '<img class="preview-photo-img" alt="" ' +
+                    'style="display:none;' +
+                    'width:100%;height:100%;' +
+                    'object-fit:cover;' +
+                    'object-position:center top;">' +
+            '</div>'
+        );
+    }
+
+
     function showPreview(vals, selections) {
 
         console.log(
@@ -2825,6 +3095,12 @@
                             'z-index:0;' +
 
                         '">' ;
+
+            if (!isPage2 && hasPhotoBox()) {
+                var pbox0 = getPhotoBox();
+                html += previewPhotoHTML(pbox0, dims, fit);
+            }
+
 
 
             /* =====================================================
@@ -3145,6 +3421,10 @@
         document.body.appendChild(
             preview
         );
+
+        wireAllPhotoWidgets(preview);
+        refreshPhotoWidgets();
+
 
 
         /* =====================================================
@@ -3579,6 +3859,27 @@
                 )
             );
 
+    function photoDataUrlKind(dataUrl) {
+        var s = String(dataUrl || "");
+        if (s.indexOf("data:image/png") === 0) { return "png"; }
+        if (s.indexOf("data:image/jpeg") === 0 || s.indexOf("data:image/jpg") === 0) { return "jpg"; }
+        return "jpg";
+    }
+
+
+    function dataUrlToBytes(dataUrl) {
+        var s = String(dataUrl || "");
+        var comma = s.indexOf(",");
+        var b64 = comma >= 0 ? s.slice(comma + 1) : s;
+        var bin = atob(b64);
+        var len = bin.length;
+        var bytes = new Uint8Array(len);
+        for (var i = 0; i < len; i++) { bytes[i] = bin.charCodeAt(i); }
+        return bytes;
+    }
+
+
+
         var page =
             doc.addPage(
                 [paper.w, paper.h]
@@ -3711,6 +4012,38 @@
                     L.StandardFonts.HelveticaBold
                 );
 
+        /* Embed the attached 2x2 photo once, then reuse it. */
+        var photoBytes = null;
+        var photoKind = "";
+        var photoImg = null;
+        if (currentPhotoDataUrl) {
+            try {
+                photoBytes = dataUrlToBytes(currentPhotoDataUrl);
+                photoKind = photoDataUrlKind(currentPhotoDataUrl);
+            } catch (pe) {
+                console.error("Photo embed error:", pe);
+                photoBytes = null;
+                photoKind = "";
+            }
+            if (photoBytes) {
+                try {
+                    if (photoKind === "png") {
+                        photoImg = await doc.embedPng(photoBytes);
+                    } else {
+                        try {
+                            photoImg = await doc.embedJpg(photoBytes);
+                        } catch (je) {
+                            try { photoImg = await doc.embedPng(photoBytes); }
+                            catch (pe2) { photoImg = null; }
+                        }
+                    }
+                } catch (ee) {
+                    console.error("Photo embed error:", ee);
+                    photoImg = null;
+                }
+            }
+        }
+
 
             var rgb =
                 L.rgb;
@@ -3769,6 +4102,7 @@
                     return;
 
                 }
+
 
             }
 
@@ -4182,6 +4516,24 @@
                         );
 
                 }
+
+                /* ATTACHED 2x2 PHOTO (page 1 only, vector fallback path) */
+                if (!isPage2 && photoImg && hasPhotoBox()) {
+                    try {
+                        var fphb = getPhotoBox();
+                        var fphw = (Number(fphb.w) || 0) * scale;
+                        var fphh = (Number(fphb.h) || 0) * scale;
+                        var fphx = (Number(fphb.x) || 0) * scale;
+                        var fphy = ah - (((Number(fphb.y) || 0) + (Number(fphb.h) || 0)) * scale);
+                        page.drawImage(photoImg, {
+                            x: fphx, y: fphy, width: fphw, height: fphh
+                        });
+                    } catch (fpe) {
+                        console.error("Photo draw error:", fpe);
+                    }
+                }
+
+
 
             }
 

@@ -24,6 +24,8 @@ hasPage2:false, hasCheckboxes:false, useUppercase:true,
 mobileField:"mobileNumber",
 pdfPrefix:"Membership-Update-",
 pdfSuffix:"Form",
+/* 2x2 photo box (top-right "Attach Recent Photo"). Adjust x/y/w/h to match scan. */
+photo:{x:1800,y:95,w:598,h:600},
 images:["FORMS/MEMBERSHIP FORM UPDATE 2025 V2.png"],
 
 fields:{

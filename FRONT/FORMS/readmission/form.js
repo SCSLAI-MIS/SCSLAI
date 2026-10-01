@@ -21,6 +21,8 @@ hasPage2:false, hasCheckboxes:false, useUppercase:false,
 mobileField:"mobile",
 pdfPrefix:"Readmission-",
 pdfSuffix:"Membership-Readmission",
+/* 2x2 photo box (top-right "Attach Recent Photo (2x2)"). Adjust x/y/w/h to match scan. */
+photo:{x:1800,y:95,w:598,h:600},
 images:["FORMS/MEMBERSHIP RE-ADMISSION 2025 Edition.png"],
 
 fields:{
@@ -72,6 +74,7 @@ ben4Rel:{x:1334,y:2867,w:594,h:68,fs:20},
 ben4Contact:{x:1936,y:2867,w:510,h:68,fs:18},
 },
 
+
 validate:function(vals,miss){
 if(!vals.edpNumber)miss.push("EDP Number");
 if(!vals.lastName)miss.push("Last Name");
@@ -99,6 +102,7 @@ if(!vals.officeTel)miss.push("Office Tel. No.");
 if(!vals.incomeSource)miss.push("Source of Income");
 
 },
+
 
 getResult:function(vals){
 return{form:"readmission",fields:vals};
