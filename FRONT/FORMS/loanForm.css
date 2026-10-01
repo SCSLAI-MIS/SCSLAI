@@ -389,6 +389,7 @@ body.loan-modal-open {
     background: #ffffff;
     border: 2px dashed rgba(0, 63, 145, 0.55);
     border-radius: 4px;
+    cursor: pointer;
 }
 
 .form-photo-widget.has-photo .form-photo-frame {

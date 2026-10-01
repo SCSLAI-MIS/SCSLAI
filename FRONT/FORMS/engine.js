@@ -136,6 +136,7 @@
                 var nm = widget.querySelector(".form-photo-name");
                 var empty = widget.querySelector(".form-photo-empty");
                 var rm = widget.querySelector("[data-photo-remove]");
+                var browse = widget.querySelector("[data-photo-browse]");
                 var hasPhoto = !!currentPhotoDataUrl;
                 if (img) {
                     if (hasPhoto) { img.src = currentPhotoDataUrl; }
@@ -143,6 +144,7 @@
                 }
                 if (empty) { empty.style.display = hasPhoto ? "none" : "flex"; }
                 if (nm) { nm.textContent = hasPhoto ? (currentPhotoName || "Attached photo") : ""; }
+                if (browse) { browse.textContent = hasPhoto ? "Replace Photo" : "Upload Photo"; }
                 if (rm) { rm.style.display = hasPhoto ? "inline-block" : "none"; }
                 widget.classList.toggle("has-photo", hasPhoto);
             }
@@ -182,8 +184,13 @@
         var input = widget.querySelector('input[data-photo-input="1"]');
         var browse = widget.querySelector("[data-photo-browse]");
         var rm = widget.querySelector("[data-photo-remove]");
+        var frame = widget.querySelector("[data-photo-frame]");
         if (browse && input) {
             browse.addEventListener("click", function () { input.click(); });
+        }
+        /* "Attach Recent Photo" box itself uploads — click frame/empty/preview to pick file. */
+        if (frame && input) {
+            frame.addEventListener("click", function () { input.click(); });
         }
         if (input) {
             input.addEventListener("change", function () {
@@ -206,7 +213,7 @@
         var cls = "form-photo-widget" + (extraClass ? " " + extraClass : "");
         return (
             '<div class="' + cls + '">' +
-                '<div class="form-photo-frame">' +
+                '<div class="form-photo-frame" data-photo-frame title="Click to upload photo">' +
                     '<div class="form-photo-empty">' +
                         '<span class="form-photo-icon">+</span>' +
                         '<span class="form-photo-empty-title">Attach Recent Photo</span>' +
