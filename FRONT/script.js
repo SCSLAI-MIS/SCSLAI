@@ -1404,6 +1404,23 @@ const announcementDotsWrap = document.querySelector('.announcement-dots');
 let announcementIndex = 0;
 let announcementTimer = null;
 let announcementDots = [];
+// Preloaded Image objects — this is what makes next/prev feel instant.
+// Without this, each click fetches + decodes a 1.5–3.6 MB file on demand.
+const announcementCache = [];
+
+function preloadAnnouncements() {
+  announcementImages.forEach((item, i) => {
+    if (announcementCache[i]) return;
+    const img = new Image();
+    img.decoding = 'async';
+    // decode() warms the bitmap so the swap doesn't jank on first view
+    img.src = item.src;
+    if (typeof img.decode === 'function') {
+      img.decode().catch(() => {});
+    }
+    announcementCache[i] = img;
+  });
+}
 
 function updateAnnouncementDots() {
   announcementDots.forEach((dot, i) => {
@@ -1414,15 +1431,23 @@ function updateAnnouncementDots() {
 function showAnnouncement(index) {
   if (!announcementImg) return;
   const safeIndex = (index + announcementImages.length) % announcementImages.length;
-  announcementImg.classList.remove('slide-up');
-  announcementImg.style.animation = 'none';
-  announcementImg.offsetWidth;
-  announcementImg.style.animation = '';
-  announcementImg.src = announcementImages[safeIndex].src;
-  announcementImg.alt = announcementImages[safeIndex].alt;
-  announcementImg.classList.add('slide-up');
+  const next = announcementImages[safeIndex];
+  // Instant UI feedback — dots/index update first so clicks feel responsive
   announcementIndex = safeIndex;
   updateAnnouncementDots();
+
+  announcementImg.classList.remove('slide-up');
+  void announcementImg.offsetWidth;
+  // Only touch src if it actually changed (avoids reload flash on same slide)
+  if (!announcementImg.getAttribute('src') || !announcementImg.src.endsWith(next.src)) {
+    announcementImg.src = next.src;
+  }
+  announcementImg.alt = next.alt;
+  announcementImg.classList.add('slide-up');
+
+  // Keep neighbours warm so rapid next/prev never waits on network
+  const warm = (announcementIndex + 1) % announcementImages.length;
+  announcementCache[warm]?.decode?.().catch(() => {});
 }
 
 function nextAnnouncement() {
@@ -1446,6 +1471,7 @@ function stopAnnouncementAuto() {
 }
 
 if (announcementImg) {
+  preloadAnnouncements();
   announcementImg.classList.add('slide-up');
   if (announcementDotsWrap) {
     announcementDots = announcementImages.map((item, i) => {

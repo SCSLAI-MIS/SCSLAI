@@ -2974,7 +2974,8 @@ nav:has(.dropdown:hover) .dropdown:not(:hover):not(.active) .dropbtn {
     position:relative;
     display:flex;
     flex-direction:column;
-    justify-content:center;
+    justify-content:flex-start;
+    align-items:center;
     padding:20px 10px 20px;
 }
 
@@ -2982,9 +2983,12 @@ nav:has(.dropdown:hover) .dropdown:not(:hover):not(.active) .dropbtn {
     position: relative;
     display:flex;
     justify-content:center;
-    padding:10px;
+    align-items:center;
+    width:100%;
+    max-width:900px;
+    margin:0 auto;
+    padding:10px 10px 34px;
     overflow:hidden;
-    padding-top:65px;
 }
 
 .announcement-posters img{
@@ -2993,45 +2997,57 @@ nav:has(.dropdown:hover) .dropdown:not(:hover):not(.active) .dropbtn {
     height:auto;
     object-fit:contain;
     border:1px solid #ccc;
+    display:block;
+    border-radius:6px;
+    background:#fff;
 }
 
 .announcement-control{
     position:absolute;
     top:50%;
+    /* offset for the 34px bottom dots padding so buttons center on the image, not the container */
+    margin-top:-12px;
     transform:translateY(-50%);
-    background:rgba(0, 0, 0, 0.123);
-    border:none;
+    background:rgba(0, 0, 0, 0.164);
+    border:1px solid rgba(255,255,255,0.35);
     color:#ffffff;
     width:30px;
     height:30px;
     border-radius:50%;
     cursor:pointer;
-    font-size:22px;
+    font-size:20px;
     line-height:1;
+    padding-bottom:3px;
     display:flex;
     align-items:center;
     justify-content:center;
     transition:background .25s ease, transform .15s ease;
     z-index:3;
+    box-shadow:0 4px 12px rgba(0,0,0,0.35);
 }
 
 .announcement-control:hover{
-    background:rgba(0, 0, 0, 0.384);
+    background:rgba(44, 44, 44, 0.75);
     transform:translateY(-50%) scale(1.05);
 }
 
+.announcement-control:focus-visible{
+    outline:2px solid #78fdc6;
+    outline-offset:2px;
+}
+
 .announcement-control.prev{
-    left:14px;
+    left:18px;
 }
 
 .announcement-control.next{
-    right:14px;
+    right:18px;
 }
 
 .announcement-dots{
     position:absolute;
     left:50%;
-    bottom:14px;
+    bottom:10px;
     transform:translateX(-50%);
     display:flex;
     align-items:center;
@@ -3056,22 +3072,24 @@ nav:has(.dropdown:hover) .dropdown:not(:hover):not(.active) .dropbtn {
 }
 
 .title{
-    position:absolute;
-    top:10px;
-    left:50%;
-    transform:translateX(-50%);
-    width:calc(100% - 36px);
+    position:relative;
+    top:auto;
+    left:auto;
+    transform:none;
+    width:100%;
+    max-width:900px;
+    margin:0 auto;
     text-align:center;
     font-size:35px;
     font-weight:bold;
     color:rgb(250, 250, 250);
-    padding:15px;
+    padding:5px 15px 12px;
     z-index:2;
     border-radius:8px;
 }
 
 .announcement-posters img.slide-up{
-    animation: slideUp 0.7s ease-out forwards;
+    animation: slideUp 0.35s ease-out forwards;
 }
 
 @keyframes slideUp{
@@ -4302,11 +4320,21 @@ footer{
     }
 
     .announcement-posters{
-        padding-top:20px;
+        padding:10px 10px 34px;
+        max-width:100%;
     }
 
     .announcement-posters img{
         width:100%;
+    }
+
+
+    .announcement-control.prev{
+        left:12px;
+    }
+
+    .announcement-control.next{
+        right:12px;
     }
 
     .title{
