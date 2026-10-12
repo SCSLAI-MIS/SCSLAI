@@ -8,9 +8,9 @@ SCSLAI.register({
 key:"authorityLc",
 title:"LC Authority to Deduct Form",
 fieldLabels:{
-fullName:"Full Name",employedAs:"Employed As",
-officeOf:"Office Of",signDay:"Day today",signMonth:"Month today",
-signYear:"Year today",signPlace:"Place Signed",
+fullName:"Full Name",employedAs:"Presently employed as",
+officeOf:"Office",signDay:"Date today",signMonth:"Month today",
+signYear:"Year today",signTime:"Time",
 email:"Email",mobileNumber:"Mobile Number",permanentAddr:"Permanent Address"
 },
 width:2550, height:4200,
@@ -42,7 +42,7 @@ officeOf:{x:454,y:1420,w:1025,h:50,fs:24},
 signDay:{x:519,y:2280,w:151,h:50,fs:22},
 signMonth:{x:847,y:2280,w:151,h:50,fs:22},
 signYear:{x:1091,y:2280,w:91,h:50,fs:22},
-signPlace:{x:1254,y:2280,w:151,h:50,fs:22},
+signTime:{x:1254,y:2280,w:151,h:50,fs:22},
 
 /* CONTACT DETAILS */
 email:{x:404,y:2730,w:664,h:50,fs:22},
@@ -54,9 +54,10 @@ validate:function(vals,miss){
 if(!vals.fullName)miss.push("Full Name (I, ___)");
 if(!vals.employedAs)miss.push("Presently employed as");
 if(!vals.officeOf)miss.push("Office of");
-if(!vals.signDay)miss.push("Day today");
+if(!vals.signDay)miss.push("Date today");
 if(!vals.signMonth)miss.push("Month today");
 if(!vals.signYear)miss.push("Year today");
+if(!vals.signTime)miss.push("Time");
 if(!vals.mobileNumber)miss.push("Mobile Number");
 if(!vals.email)miss.push("Email");
 if(!vals.permanentAddr)miss.push("Permanent Address");

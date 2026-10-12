@@ -14,7 +14,13 @@ mobile:"Mobile Number",emailAddress:"Email Address",permanentAddr:"Permanent Add
 officeStation:"Office / Station",position:"Position",gsisId:"GSIS ID No.",tin:"TIN",
 edpNumber:"EDP Number",officeAddress:"Office Address",monthlySalary:"Monthly Salary",
 lengthService:"Length of Service",appointment:"Status of Appointment",dateAppoint:"Date of Appointment",
-officeTel:"Office Tel. No.",incomeSource:"Source of Income"
+officeTel:"Office Tel. No.",incomeSource:"Source of Income",ben1Name:"Beneficiary 1 Name",ben1Dob:"Beneficiary 1 Birthdate",
+ben1Rel:"Beneficiary 1 Relationship",ben1Contact:"Beneficiary 1 Contact Number",
+ben2Name:"Beneficiary 2 Name",ben2Dob:"Beneficiary 2 Birthdate",ben2Rel:"Beneficiary 2 Relationship",
+ben2Contact:"Beneficiary 2 Contact Number",
+ben3Name:"Beneficiary 3 Name",ben3Dob:"Beneficiary 3 Birthdate",ben3Rel:"Beneficiary 3 Relationship",
+ben3Contact:"Beneficiary 3 Contact Number",ben4Name:"Beneficiary 4 Name",ben4Dob:"Beneficiary 4 Birthdate",
+ben4Rel:"Beneficiary 4 Relationship",ben4Contact:"Beneficiary 4 Contact Number"
 },
 width:2550, height:4200,
 hasPage2:false, hasCheckboxes:false, useUppercase:false,
