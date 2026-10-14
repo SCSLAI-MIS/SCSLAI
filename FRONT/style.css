@@ -206,17 +206,8 @@ nav a:hover,
     color:#78fdc6;
 }
 
-/* Dim other main nav items when hovering */
-nav:has(> a:hover) > a:not(:hover):not(.active),
-nav:has(> a:hover) .dropdown:not(.active) .dropbtn {
-    opacity: 0.6;
-}
-
-/* When hovering a dropdown, dim other items */
-nav:has(.dropdown:hover) > a:not(:hover):not(.active),
-nav:has(.dropdown:hover) .dropdown:not(:hover):not(.active) .dropbtn {
-    opacity: 0.6;
-}
+/* Dim-on-hover disabled: keep all main nav items at full opacity
+       so ABOUT US no longer fades when hovering other links. */
 
 .dropbtn:focus,
 .dropbtn:active{
@@ -4130,6 +4121,12 @@ body.calculator-modal-open{
     fill:#024730e8;
 }
 
+.contact-card-body{
+    min-width:0;
+    flex:1 1 auto;
+    max-width:100%;
+}
+
 .contact-card-body a{
     margin:0 0 8px;
     font-size:22px;
@@ -4461,9 +4458,19 @@ footer{
         padding:18px 16px;
     }
 
-    .contact-card-body h2{
+    .contact-card-body h2,
+    .contact-card-body a{
         font-size:clamp(16px, 4.8vw, 20px);
         line-height:1.25;
+    }
+
+    .contact-card-body p{
+        font-size:14px;
+    }
+
+    .bank-contact p{
+        margin:0;
+        line-height:1.5;
     }
 
     .bank-contact{
@@ -4472,8 +4479,13 @@ footer{
     }
 
     .contact-card-icon{
-        min-width:48px;
-        min-height:48px;
+        min-width:38px;
+        min-height:38px;
+    }
+
+    .contact-card-icon svg{
+        width:22px;
+        height:22px;
     }
 
     .gallery{
