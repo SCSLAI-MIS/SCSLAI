@@ -1,0 +1,350 @@
+/* ===================================================== */
+/* STAR GAME — Game 1 of the SCSLAI anniversary games
+
+   TEMPORARY — delete the whole Games/ folder after the anniversary.
+   Game 1 is ON by default (this file + star-game.js are linked).
+   Game 2 (the Heart Game) ships commented out; see Games/README.md.
+
+   This file carries both the star look and the shared popup UI
+   (.easter-egg-overlay, .easter-egg-card, .easter-egg-confetti, ...),
+   so Game 1 needs exactly two lines per page:
+       <link rel="stylesheet" href="Games/star-game.css">
+       <script src="Games/star-game.js"></script>
+   ===================================================== */
+.easter-egg-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  margin-left: 10px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  opacity: 1;
+  filter: none;
+  transform: scale(1);
+  transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease;
+  border-radius: 50%;
+  line-height: 1;
+  color: #ffe9a8;
+  font-size: 26px;
+  text-shadow: 0 0 6px rgba(255, 220, 120, 0.55);
+}
+
+.easter-egg-trigger .easter-egg-star {
+  display: inline-block;
+  pointer-events: none;
+  user-select: none;
+  animation: easterEggTwinkle 2.4s ease-in-out infinite;
+}
+
+@keyframes easterEggTwinkle {
+  0%, 100% { opacity: 1; transform: scale(0.92) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.08) rotate(10deg); }
+}
+
+/* The five hiding-spot variants keep their warm tint, but all of them are
+   fully visible (no transparency camouflage). */
+.easter-egg-trigger.egg-tint-1 { opacity: 1; color: #fff3c4; }
+.easter-egg-trigger.egg-tint-2 { opacity: 1; color: #ffe9a8; }
+.easter-egg-trigger.egg-tint-3 { opacity: 1; color: #e8ecff; }
+.easter-egg-trigger.egg-tint-4 { opacity: 1; color: #fff8dc; }
+.easter-egg-trigger.egg-tint-5 { opacity: 1; color: #ffe9a8; }
+
+.easter-egg-trigger:hover,
+.easter-egg-trigger:focus-visible {
+  opacity: 1;
+  filter: none;
+  transform: scale(1.6) rotate(-8deg);
+  outline: 2px dashed #78fdc6;
+  outline-offset: 3px;
+  box-shadow: 0 0 12px rgba(120, 253, 198, 0.9);
+  z-index: 60;
+}
+
+.easter-egg-trigger[data-egg-id="framework"] {
+  z-index: 50;
+}
+
+.easter-egg-trigger.found {
+  opacity: 1;
+  filter: none;
+  animation: easterEggWiggle 0.6s ease;
+}
+
+@keyframes easterEggWiggle {
+  0% { transform: scale(1) rotate(0); }
+  25% { transform: scale(1.8) rotate(-12deg); }
+  50% { transform: scale(1.6) rotate(10deg); }
+  75% { transform: scale(1.9) rotate(-6deg); }
+  100% { transform: scale(1.6) rotate(0); }
+}
+
+/* Floating fallback if no footer found */
+.easter-egg-trigger.easter-egg-floating {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  z-index: 9999;
+  margin: 0;
+  width: 14px;
+  height: 14px;
+  opacity: 0.12;
+}
+
+.easter-egg-trigger.easter-egg-floating img {
+  width: 14px;
+  height: 14px;
+}
+
+.easter-egg-trigger {
+  width: 89px;
+  height: 89px;
+}
+.easter-egg-trigger img {
+  width: 90px;
+  height: 90px;
+}
+/* Popup overlay styles — shared popup UI, kept in this file so the Star
+   Game is self-contained (the Heart Game carries its own copy). */
+.easter-egg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(5, 25, 18, 0.65);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.easter-egg-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.easter-egg-card {
+  position: relative;
+  width: min(420px, 92vw);
+  text-align: center;
+  background: linear-gradient(160deg, #ffffff 0%, #e8f8ef 100%);
+  border: 3px solid #12503c;
+  border-radius: 22px;
+  padding: 34px 28px 26px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  transform: scale(0.7) translateY(20px);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+.easter-egg-overlay.show .easter-egg-card {
+  transform: scale(1) translateY(0);
+}
+
+.easter-egg-card::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  left: -40px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(120,253,198,0.5), transparent 70%);
+  pointer-events: none;
+}
+
+.easter-egg-trophy {
+  font-size: 56px;
+  line-height: 1;
+  display: block;
+  margin-bottom: 10px;
+  animation: easterEggBounce 1s infinite alternate ease-in-out;
+}
+
+@keyframes easterEggBounce {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-8px) scale(1.08); }
+}
+
+.easter-egg-card h2 {
+  margin: 0 0 8px;
+  color: #12503c;
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.easter-egg-card p {
+  margin: 0 0 6px;
+  color: #2f4a3f;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.easter-egg-card .easter-egg-sub {
+  font-size: 13px;
+  color: #6b857a;
+  margin-bottom: 18px;
+}
+
+.easter-egg-found-star {
+  display: block;
+  margin: 6px auto 10px;
+  font-size: 64px;
+  line-height: 1;
+  color: #ffd166;
+  text-shadow: 0 0 18px rgba(255, 209, 102, 0.9), 0 4px 0 #7a5200;
+  animation: easterEggBounce 1s infinite alternate ease-in-out;
+}
+
+.easter-egg-close {
+  margin-top: 10px;
+  border: none;
+  cursor: pointer;
+  background: #12503c;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  padding: 11px 28px;
+  border-radius: 999px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.easter-egg-close:hover {
+  background: #0c382a;
+  transform: scale(1.05);
+}
+
+.easter-egg-confetti {
+  position: absolute;
+  top: -10px;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: easterEggFall linear forwards;
+}
+
+@keyframes easterEggFall {
+  to {
+    transform: translateY(480px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* TEMPORARY EASTER EGG — finale WELCOME blast (word-only + confetti) */
+.easter-egg-welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(5, 25, 18, 0.72);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.easter-egg-welcome-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.easter-egg-welcome-text {
+  margin: 0;
+  text-align: center;
+  font-weight: 1000;
+  font-size: clamp(38px, 8vw, 96px);
+  line-height: 1.05;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-shadow: 0 4px 0 #12503c, 0 10px 30px rgba(0,0,0,0.5);
+  transform: scale(0.6);
+  animation: easterWelcomePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.easter-egg-welcome-text span {
+  display: block;
+  color: #78fdc6;
+}
+
+@keyframes easterWelcomePop {
+  to { transform: scale(1); }
+}
+
+.easter-egg-welcome-confetti {
+  position: absolute;
+  top: -16px;
+  width: 12px;
+  height: 16px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: easterEggFall linear forwards;
+}
+
+@media (max-width: 480px) {
+  .easter-egg-trigger { width: 62px; height: 62px; opacity: 1; }
+  .easter-egg-trigger img { width: 60px; height: 60px; }
+  .easter-egg-trophy { font-size: 46px; }
+  .easter-egg-card h2 { font-size: 22px; }
+}
+
+.easter-egg-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0 14px;
+}
+
+.easter-egg-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #c9d8d1;
+  border: 2px solid #12503c;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.easter-egg-dot.lit {
+  background: #ffd166;
+  transform: scale(1.25);
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.9);
+}
+
+.easter-egg-count {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(18, 80, 60, 0.1);
+  color: #12503c;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.easter-egg-prize {
+  margin: 10px 0 4px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff8e1;
+  border: 2px dashed #d4a017;
+  color: #6b4d00;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.easter-egg-prize strong { color: #7a5200; }
+
+/* END of the Star Game styles. */
