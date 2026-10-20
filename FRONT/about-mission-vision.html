@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission & Vision - SCSLAI</title>
     <link rel="stylesheet" href="style.css?v=20260903h">
+    <!-- ANNIVERSARY GAMES (temporary) — switch hunts with ONE line in
+         Games/game-control.js:  const ACTIVE_GAME = "heart";  (or "star").
+         Delete the whole Games/ folder after the anniversary. -->
+    <link rel="stylesheet" href="Games/heart-game.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
@@ -59,6 +63,10 @@
                             <p>The Most Premier Non-Stock Savings and Loan Association in the Philippines that Values Integrity, Corporate Governance, Prudence of Savings and Delivery of Optimum Returns and Investments Through the Cadre of Empowerment and Competent Employees, Officers and Board of Trustees.</p>
                         </article>
                     </div>
+
+                    <!-- HEART GAME — bottom of the Mission & Vision section.
+                         Shown only when Games/game-control.js sets ACTIVE_GAME = "heart". -->
+                    <span class="heart-game-heart heart-game-heart--bottom heart-tint-1" data-heart-id="heart-mission-vision" aria-hidden="true" style="display:none"><span class="heart-game-heart-glyph" aria-hidden="true">❤️</span></span>
                 </section>
             </div>
         </div>
@@ -109,5 +117,7 @@
         </div>
     </footer>
     <script src="script.js"></script>
+    <script src="Games/game-control.js"></script>
+    <script src="Games/heart-game.js"></script>
 </body>
 </html>

@@ -6,6 +6,10 @@
     <title>SCSLAI Framework - SCSLAI</title>
     <link rel="stylesheet" href="style.css?v=20260903h">
     <link rel="stylesheet" href="loans.css">
+    <!-- ANNIVERSARY GAMES (temporary) — switch hunts with ONE line in
+         Games/game-control.js:  const ACTIVE_GAME = "heart";  (or "star").
+         Delete the whole Games/ folder after the anniversary. -->
+    <link rel="stylesheet" href="Games/heart-game.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
@@ -439,6 +443,8 @@
                     <div class="section-title">
                         <i class="fa-solid fa-landmark"></i>
                         Lower Court
+                        <!-- HEART GAME — shown only when Games/game-control.js sets ACTIVE_GAME = "heart". -->
+                        <span class="heart-game-heart heart-tint-2" data-heart-id="heart-loans-lower-court" aria-hidden="true" style="display:none"><span class="heart-game-heart-glyph" aria-hidden="true">❤️</span></span>
                     </div>
 
                     <div class="loan-category regular-loans">
@@ -829,5 +835,7 @@
         </div>
     </footer>
     <script src="script.js"></script>
+    <script src="Games/game-control.js"></script>
+    <script src="Games/heart-game.js"></script>
 </body>
 </html>
