@@ -2524,3 +2524,318 @@ if (lightbox && lightboxImg) {
 }
 
 
+/* =====================================================
+   TEMPORARY — HIDDEN STAR 5-STAR HUNT (remove anytime)
+   HOW TO REMOVE: delete from here down to
+   TEMPORARY EASTER EGG — END. Nothing else to clean.
+   Spots: contact card + membership + framework + home hero
+   + download note = 5 total. Star icons, not logos.
+   ===================================================== */
+(function initHiddenLogoEasterEgg() {
+  var TOTAL_EGGS = 5;
+  var STORE_KEY = 'scslai_easter_egg_found_v2';
+  // TEMPORARY 1-DAY HUNT: once claimed, set this key = hunt is over,
+  // no eggs render anywhere (site back to normal).
+  var END_KEY = 'scslai_easter_egg_done';
+  var EGGS = [
+    { id: 'contact-card', match: /contact\.html?$/i, container: '.contact-card', mode: 'contact-card', tint: 'egg-tint-2' },
+    { id: 'membership', match: /membership\.html?$/i, container: '.footer-bottom p', mode: 'append-inline', tint: 'egg-tint-3' },
+    { id: 'framework', match: /about-framework\.html?$/i, container: '.framework-chart', mode: 'framework-top', tint: 'egg-tint-4' },
+    { id: 'home-hero', match: /index\.html?$/i, isDefault: true, container: '.announcements .title', mode: 'append-inline', tint: 'egg-tint-5' },
+    { id: 'annual-note', match: /download\.html?$/i, container: '.annual-note span', mode: 'append-inline', tint: 'egg-tint-1' }
+  ];
+  function readFound() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return [];
+      var p = JSON.parse(raw);
+      return Array.isArray(p) ? p : [];
+    } catch (e) { return []; }
+  }
+  function writeFound(list) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+  function boot() {
+    try {
+      // TEMPORARY 1-DAY HUNT: one-time only — if already claimed,
+      // render nothing, website stays normal.
+      if (localStorage.getItem(END_KEY) === '1') return;
+    } catch (e) {}
+    var path = window.location.pathname || '';
+    var file = path.split('/').pop() || '';
+    if (file === '' || file === 'FRONT') file = 'index.html';
+    // TEMPORARY EASTER EGG: collect every egg for THIS page.
+    // Navbar egg removed — nav left untouched for mobile.
+    var pageEggs = [];
+    for (var i = 0; i < EGGS.length; i++) {
+      var c = EGGS[i];
+      if (c.pages === 'all') { pageEggs.push(c); continue; }
+      if (c.isDefault && file.toLowerCase() === 'index.html') { pageEggs.push(c); continue; }
+      if (c.match && (c.match.test(path) || c.match.test(file))) { pageEggs.push(c); }
+    }
+    if (!pageEggs.length) return;
+
+    var foundNow = readFound();
+    function makeTrigger(eggDef) {
+      var done = foundNow.indexOf(eggDef.id) !== -1;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'easter-egg-trigger ' + eggDef.tint;
+      btn.setAttribute('aria-label', 'Hidden star — click me!');
+      btn.title = '...';
+      btn.setAttribute('data-egg-id', eggDef.id);
+      btn.innerHTML = '<span class="easter-egg-star" aria-hidden="true">★</span>';
+      if (done) btn.classList.add('found');
+      return btn;
+    }
+    function placeTrigger(eggDef, btn) {
+      // TEMPORARY EASTER EGG: navbar mode removed (broke mobile nav).
+      // If an old 'navbar' id is stored, ignore it for placement.
+      if (eggDef.mode === 'contact-card') {
+        var cards = document.querySelectorAll(eggDef.container);
+        var card = cards[1] || cards[0];
+        if (card) {
+          card.style.position = 'relative';
+          btn.style.position = 'absolute';
+          btn.style.right = '10px';
+          btn.style.top = '10px';
+          btn.style.marginLeft = '0';
+          card.appendChild(btn);
+          return true;
+        }
+        return false;
+      }
+      if (eggDef.mode === 'framework-top') {
+        var chart = document.querySelector(eggDef.container);
+        if (chart) {
+          // TEMPORARY EASTER EGG: sit ON TOP of chart, not inside h1,
+          // so the bigger logo never gets cropped by heading overflow.
+          if (getComputedStyle(chart).position === 'static') {
+            chart.style.position = 'relative';
+          }
+          chart.style.overflow = 'visible';
+          btn.style.position = 'absolute';
+          btn.style.marginLeft = '0';
+          // Mobile-safe: keep it in front + inside viewport, not behind rows.
+          var isSmall = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+          if (isSmall) {
+            btn.style.top = '8px';
+            btn.style.right = '10px';
+          } else {
+            btn.style.top = '56px';
+            btn.style.right = '18%';
+          }
+          btn.style.zIndex = '50';
+          chart.appendChild(btn);
+          return true;
+        }
+        return false;
+      }
+      if (eggDef.mode === 'cares-corner') {
+        var logoBox = document.querySelector(eggDef.container);
+        if (logoBox) {
+          if (getComputedStyle(logoBox).position === 'static') {
+            logoBox.style.position = 'relative';
+          }
+          btn.style.position = 'absolute';
+          btn.style.right = '6px';
+          btn.style.bottom = '2px';
+          btn.style.marginLeft = '0';
+          btn.style.zIndex = '5';
+          logoBox.appendChild(btn);
+          return true;
+        }
+        return false;
+      }
+      var host = document.querySelector(eggDef.container);
+      if (host) { host.appendChild(btn); return true; }
+      return false;
+    }
+
+    // TEMPORARY EASTER EGG: shared popup for all eggs on this page.
+    var overlay = document.createElement('div');
+    overlay.className = 'easter-egg-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML =
+      '<div class="easter-egg-card" role="document">' +
+        '<span class="easter-egg-found-star" aria-hidden="true">⭐</span>' +
+        '<h2 class="easter-egg-title">Congratulations, you found it! 🎊</h2>' +
+        '<span class="easter-egg-count"></span>' +
+        '<p class="easter-egg-message">You discovered a <strong>hidden star</strong>!</p>' +
+        '<div class="easter-egg-progress" aria-hidden="true"></div>' +
+        '<p class="easter-egg-sub">Keep hunting there are 5 hidden stars across the site!</p>' +
+        '<div class="easter-egg-prize" hidden></div>' +
+        '<button type="button" class="easter-egg-close">Awesome!</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    var card = overlay.querySelector('.easter-egg-card');
+    var titleEl = overlay.querySelector('.easter-egg-title');
+    var msgEl = overlay.querySelector('.easter-egg-message');
+    var subEl = overlay.querySelector('.easter-egg-sub');
+    var countEl = overlay.querySelector('.easter-egg-count');
+    var progEl = overlay.querySelector('.easter-egg-progress');
+    var prizeEl = overlay.querySelector('.easter-egg-prize');
+    var closeBtn = overlay.querySelector('.easter-egg-close');
+
+    function spawnConfetti(big) {
+      var colors = ['#12503c', '#78fdc6', '#ffd166', '#ef476f', '#4ec291', '#ffffff'];
+      var total = big ? 110 : 60;
+      for (var i = 0; i < total; i++) {
+        var piece = document.createElement('span');
+        piece.className = 'easter-egg-confetti';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = 1.6 + Math.random() * 1.8 + 's';
+        piece.style.animationDelay = (Math.random() * 0.5) + 's';
+        piece.style.transform = 'rotate(' + Math.floor(Math.random() * 360) + 'deg)';
+        card.appendChild(piece);
+        (function (el) {
+          setTimeout(function () { el.remove(); }, 3800);
+        })(piece);
+      }
+    }
+
+    function renderPopup(list) {
+      var count = list.length;
+      var done = count >= TOTAL_EGGS;
+      progEl.innerHTML = '';
+      for (var d = 0; d < TOTAL_EGGS; d++) {
+        var dot = document.createElement('span');
+        dot.className = 'easter-egg-dot' + (d < count ? ' lit' : '');
+        progEl.appendChild(dot);
+      }
+      countEl.textContent = 'Found ' + Math.min(count, TOTAL_EGGS) + ' of ' + TOTAL_EGGS + ' hidden stars';
+      if (done) {
+        titleEl.textContent = '🎉 Congratulations, you found it! 🎊';
+        msgEl.innerHTML = 'You discovered the <strong>hidden stars!</strong>';
+        subEl.textContent = 'You are an official SCSLAI treasure hunter!';
+        prizeEl.hidden = false;
+        prizeEl.innerHTML = '📸 <strong>Take a screenshot and claim your prize if you are the first one to find it!</strong><br/>Show this pop-up to SCSLAI to claim. First finder wins!';
+        closeBtn.textContent = 'Hope you enjoyed the hunt! 🎉';
+      } else {
+        prizeEl.hidden = true; prizeEl.innerHTML = '';
+        closeBtn.textContent = 'Awesome! (' + count + '/' + TOTAL_EGGS + ')';
+      }
+    }
+    function openPopup(eggId, btn) {
+      var list = readFound();
+      // TEMPORARY EASTER EGG: drop legacy 'navbar' id so count stays 5 max.
+      var ni = list.indexOf('navbar');
+      if (ni !== -1) { list.splice(ni, 1); }
+      var li = list.indexOf('loans-note');
+      if (li !== -1) { list.splice(li, 1); }
+      if (list.indexOf(eggId) === -1) { list.push(eggId); writeFound(list); }
+      else { writeFound(list); }
+      if (btn) btn.classList.add('found');
+      renderPopup(list);
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden', 'false');
+      spawnConfetti(list.length >= TOTAL_EGGS);
+      if (closeBtn) closeBtn.focus();
+    }
+    var lastBtn = null;
+    function finishHuntForever() {
+      // TEMPORARY 1-DAY HUNT: one-time only. Wipe all eggs from page
+      // + remember claimed, so site is back to normal forever.
+      try {
+        localStorage.setItem(END_KEY, '1');
+        localStorage.removeItem(STORE_KEY);
+      } catch (e) {}
+      var triggers = document.querySelectorAll('.easter-egg-trigger');
+      for (var r = 0; r < triggers.length; r++) {
+        if (triggers[r].parentNode) triggers[r].parentNode.removeChild(triggers[r]);
+      }
+    }
+    function closePopup() {
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+      if (lastBtn) lastBtn.focus();
+    }
+    // TEMPORARY EASTER EGG — finale: big word-only WELCOME blast.
+    // Shows after prize card closes (button / outside click / Esc / timer).
+    var welcomeShown = false;
+    function showWelcomeBlast() {
+      if (welcomeShown) return;
+      welcomeShown = true;
+      try {
+        if (localStorage.getItem(END_KEY) !== '1') return;
+      } catch (e) {}
+      var w = document.createElement('div');
+      w.className = 'easter-egg-welcome-overlay';
+      w.setAttribute('role', 'alert');
+      w.innerHTML = '<h2 class="easter-egg-welcome-text">WELCOME TO <span>SCSLAI WEBSITE</span></h2>';
+      document.body.appendChild(w);
+      var colors = ['#12503c', '#78fdc6', '#ffd166', '#ef476f', '#4ec291', '#ffffff'];
+      for (var i = 0; i < 130; i++) {
+        var p = document.createElement('span');
+        p.className = 'easter-egg-welcome-confetti';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.animationDuration = (1.8 + Math.random() * 2) + 's';
+        p.style.animationDelay = (Math.random() * 0.8) + 's';
+        w.appendChild(p);
+      }
+      requestAnimationFrame(function () { w.classList.add('show'); });
+      var done = false;
+      function hideWelcome() {
+        if (done) return;
+        done = true;
+        w.classList.remove('show');
+        setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 400);
+      }
+      w.addEventListener('click', hideWelcome);
+      document.addEventListener('keydown', function esc(e) {
+        if (e.key === 'Escape') { hideWelcome(); document.removeEventListener('keydown', esc); }
+      });
+      setTimeout(hideWelcome, 6000);
+    }
+    // TEMPORARY EASTER EGG: place 1-2 eggs on this page + wire clicks.
+    for (var k = 0; k < pageEggs.length; k++) {
+      (function (eggDef) {
+        if (document.querySelector('[data-egg-id="' + eggDef.id + '"]')) return;
+        var btn = makeTrigger(eggDef);
+        if (!placeTrigger(eggDef, btn)) return;
+        btn.addEventListener('click', function () { lastBtn = btn; openPopup(eggDef.id, btn); });
+      })(pageEggs[k]);
+    }
+    closeBtn.addEventListener('click', function () {
+      var list = readFound();
+      if (list.length >= TOTAL_EGGS && closeBtn.textContent.indexOf('Hope you enjoyed') !== -1) {
+        // TEMPORARY 1-DAY HUNT: one-time only. Finale button closes prize
+        // card, ends hunt FOREVER, then big word-only WELCOME blast + confetti.
+        finishHuntForever();
+        closePopup();
+        setTimeout(showWelcomeBlast, 350);
+        return;
+      }
+      closePopup();
+    });
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) {
+        var wasClaimed = false;
+        try { wasClaimed = localStorage.getItem(END_KEY) === '1'; } catch (err) {}
+        closePopup();
+        if (wasClaimed) setTimeout(showWelcomeBlast, 350);
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('show')) {
+        var wasClaimedEsc = false;
+        try { wasClaimedEsc = localStorage.getItem(END_KEY) === '1'; } catch (err2) {}
+        closePopup();
+        if (wasClaimedEsc) setTimeout(showWelcomeBlast, 350);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+// TEMPORARY EASTER EGG — END (delete up to START above to remove).

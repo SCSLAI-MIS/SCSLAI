@@ -3910,36 +3910,21 @@ body.calculator-modal-open{
 }
 
 .download-note{
-    margin-top:20px;
-    margin-bottom:12px;
-    padding:14px 20px;
-    border-radius:8px;
-    background:linear-gradient(90deg, rgba(209, 209, 209, 0.911));
-    border:1.5px solid rgb(165, 18, 18);
-    /*box-shadow:inset 0 1px 0 rgb(223, 65, 65);*/
-    color:#000000;
-    line-height:1.6;
-    font-size:16px;
-    font-weight:700;
     display:flex;
     align-items:flex-start;
-    justify-content:flex-start;
-    gap:8px;
-    letter-spacing:0.3px;
-    width:100%;
-    box-sizing:border-box;
-    overflow-wrap:anywhere;
+    gap:12px;
+    margin-top:26px;
+    padding:18px 20px;
+    border-radius:8px;
+    background:#194b3496;
+    border:1px solid rgba(255, 255, 255, 0.212);
 }
 
-.download-note strong{
-    flex:0 0 auto;
-    white-space:nowrap;
-    color:#e40707;
-}
-
-.download-note span{
-    flex:1 1 auto;
-    min-width:0;
+.annual-note strong,
+.annual-note span{
+    margin:0;
+    color:#edf4f2;
+    line-height:1.6;
 }
 
 @media (max-width: 700px){
