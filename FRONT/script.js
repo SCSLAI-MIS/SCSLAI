@@ -2542,7 +2542,7 @@ if (lightbox && lightboxImg) {
     { id: 'membership', match: /membership\.html?$/i, container: '.footer-bottom p', mode: 'append-inline', tint: 'egg-tint-3' },
     { id: 'framework', match: /about-framework\.html?$/i, container: '.framework-chart', mode: 'framework-top', tint: 'egg-tint-4' },
     { id: 'home-hero', match: /index\.html?$/i, isDefault: true, container: '.announcements .title', mode: 'append-inline', tint: 'egg-tint-5' },
-    { id: 'download-note', match: /download\.html?$/i, container: '.download-note span', mode: 'append-inline', tint: 'egg-tint-1' }
+    { id: 'annual-note', match: /download\.html?$/i, container: '.annual-note span', mode: 'append-inline', tint: 'egg-tint-1' }
   ];
   function readFound() {
     try {
