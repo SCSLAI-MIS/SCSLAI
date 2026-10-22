@@ -1,1 +1,2 @@
-const ACTIVE_GAME = "star";
+const ACTIVE_GAME = "";
+    
