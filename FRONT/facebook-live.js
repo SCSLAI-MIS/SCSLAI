@@ -54,6 +54,8 @@
     var forceHide = false;
 
     var widget = null;
+    var pill = null;
+    var userMinimized = false;
     var mediaEl = null;
     var previewFrame = null;
     var previewBuiltWidth = 0;
@@ -335,7 +337,7 @@
                         '<span class="scslai-fb-live__hint">' + ICON_EXPAND + '<span>Watch larger</span></span>' +
                     '</button>' +
                     '<span class="scslai-fb-live__badge"><span class="scslai-fb-live__dot"></span>Live</span>' +
-                    '<button type="button" class="scslai-fb-live__close" aria-label="Hide the live video" title="Hide">' +
+                    '<button type="button" class="scslai-fb-live__close" aria-label="Minimise the live video" title="Minimise">' +
                         ICON_CLOSE +
                     '</button>' +
                 '</div>' +
@@ -403,10 +405,75 @@
     }
 
     function hideWidget(byUser) {
-        if (byUser) { rememberDismissal(); }
+        if (byUser) {
+            userMinimized = true;
+            rememberDismissal();
+        }
         closeModal(false);
         destroyPreview();
         if (widget) { widget.hidden = true; }
+        if (byUser) { showPill(); }
+    }
+
+    /* ------------------------------------------------------------------
+       Minimised "LIVE" pill
+       Tapping the × no longer makes the video vanish: the player collapses
+       into this small corner button, and tapping it brings the preview back.
+       ------------------------------------------------------------------ */
+
+    function buildPill() {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.id = 'scslai-fb-live-pill';
+        button.className = 'scslai-fb-live-pill';
+        button.setAttribute('aria-label', 'Show the live video');
+        button.setAttribute('title', 'Show ' + (cfg.title || 'the live video'));
+        button.innerHTML =
+            '<span class="scslai-fb-live__dot" aria-hidden="true"></span>' +
+            '<span class="scslai-fb-live-pill__label">Live</span>' +
+            '<span class="scslai-fb-live-pill__chevron" aria-hidden="true">' + ICON_EXPAND + '</span>';
+
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            restoreWidget();
+        });
+
+        return button;
+    }
+
+    function showPill() {
+        if (forceHide || cfg.enabled === false || !liveUrl) { return; }
+        if (!pill) { pill = buildPill(); }
+        if (!document.body.contains(pill)) { document.body.appendChild(pill); }
+        pill.hidden = false;
+    }
+
+    function hidePill() {
+        if (pill) { pill.hidden = true; }
+    }
+
+    function restoreWidget() {
+        /* Un-minimise: forget the dismissal so it stays open on later pages. */
+        userMinimized = false;
+        try { window.sessionStorage.removeItem(DISMISS_KEY); } catch (err) {}
+        hidePill();
+        showWidget();
+
+        var open = widget ? widget.querySelector('.scslai-fb-live__open') : null;
+        if (open && open.focus) {
+            try { open.focus({ preventScroll: true }); } catch (err) { open.focus(); }
+        }
+    }
+
+    /* True while the visitor minimised the window but the live session is
+       still inside its scheduled window: show the pill, not the preview. */
+    function isMinimized() {
+        if (forceHide) { return false; }
+        if (cfg.enabled === false || !liveUrl) { return false; }
+        /* An explicit tap on × always wins, even with ?fblive=1. */
+        if (userMinimized) { return inSchedule(new Date()); }
+        if (forceShow) { return false; }
+        return isDismissed() && inSchedule(new Date());
     }
 
 
@@ -607,11 +674,21 @@
     function tick() {
         if (document.hidden) { return; }
 
+        /* Minimised by the visitor: collapse the player into the LIVE pill. */
+        if (isMinimized()) {
+            if (modal && !modal.hidden) { closeModal(false); }
+            if (widget && !widget.hidden) { hideWidget(false); }
+            showPill();
+            return;
+        }
+
         if (shouldShow()) {
+            hidePill();
             showWidget();
             return;
         }
 
+        hidePill();
         if (modal && !modal.hidden) {
             closeModal(false);
         }
@@ -676,12 +753,15 @@
         });
 
         /* Small handy API for testing from the console:
-           SCSLAI_FACEBOOK_LIVE_WIDGET.open() / .close() / .hide() / .refresh() */
+           SCSLAI_FACEBOOK_LIVE_WIDGET.open() / .close() / .minimize() /
+           .restore() / .hide() / .refresh() */
         window.SCSLAI_FACEBOOK_LIVE_WIDGET = {
             refresh: tick,
             open: openModal,
             close: function () { closeModal(true); },
-            hide: function () { hideWidget(true); }
+            minimize: function () { hideWidget(true); },
+            restore: restoreWidget,
+            hide: function () { hideWidget(true); hidePill(); }
         };
     }
 

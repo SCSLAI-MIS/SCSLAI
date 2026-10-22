@@ -297,6 +297,88 @@
 }
 
 /* -------------------------------------------------------------------------
+   MINIMISED "LIVE" PILL — what the × collapses the player into
+   ------------------------------------------------------------------------- */
+
+#scslai-fb-live-pill {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 9000;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    margin: 0;
+    padding: 0 16px;
+    border: 1px solid rgba(216, 189, 116, 0.55);
+    border-radius: 999px;
+    background: linear-gradient(180deg, #0f2e22, #08170f);
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.45),
+        0 2px 6px rgba(0, 0, 0, 0.32);
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-animation: scslaiFbLiveRise 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    animation: scslaiFbLiveRise 0.3s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#scslai-fb-live-pill[hidden] {
+    display: none;
+}
+
+#scslai-fb-live-pill:hover {
+    transform: translateY(-1px);
+    border-color: rgba(240, 210, 122, 0.95);
+    box-shadow:
+        0 16px 32px rgba(0, 0, 0, 0.5),
+        0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+#scslai-fb-live-pill:focus-visible {
+    outline: 2px solid #f0d27a;
+    outline-offset: 3px;
+}
+
+.scslai-fb-live-pill__chevron {
+    display: inline-flex;
+    align-items: center;
+    color: #f0d27a;
+}
+
+.scslai-fb-live-pill__chevron svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+}
+
+@media (max-width: 480px) {
+    #scslai-fb-live-pill {
+        right: 12px;
+        bottom: 12px;
+        min-height: 40px;
+        padding: 0 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #scslai-fb-live-pill {
+        -webkit-animation: none;
+        animation: none;
+        transition: none;
+    }
+}
+
+/* -------------------------------------------------------------------------
    LARGE POPUP (opened by clicking the preview)
    ------------------------------------------------------------------------- */
 
