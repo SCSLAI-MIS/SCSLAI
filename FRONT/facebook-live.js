@@ -253,10 +253,23 @@
 
     function frameSrc(width, height, autoplay, muted) {
         if (provider === 'youtube') {
-            return 'https://www.youtube.com/embed/' + youtubeVideoId +
-                '?autoplay=' + (autoplay ? '1' : '0') +
+            var params =
+                'autoplay=' + (autoplay ? '1' : '0') +
                 '&mute=' + (muted ? '1' : '0') +
                 '&playsinline=1&rel=0';
+
+            /* YouTube refuses to play with "Error 153 / Video player
+               configuration error" when the embed request carries no Referer.
+               Passing our own origin lets the player validate the embed even
+               on hosts that strip the Referer (VS Code dev tunnels, strict
+               Referrer-Policy headers). file:// has no usable origin. */
+            try {
+                if (/^https?:$/.test(window.location.protocol)) {
+                    params += '&origin=' + encodeURIComponent(window.location.origin);
+                }
+            } catch (err) {}
+
+            return 'https://www.youtube.com/embed/' + youtubeVideoId + '?' + params;
         }
 
         return PLUGIN_ENDPOINT +
@@ -278,6 +291,10 @@
         frame.setAttribute('scrolling', 'no');
         frame.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share');
         frame.setAttribute('allowfullscreen', 'true');
+        /* Force a Referer on the embed request. Hosts that send
+           "Referrer-Policy: no-referrer" (e.g. dev tunnels) break YouTube
+           embeds with Error 153; an iframe-level policy overrides the page. */
+        frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
         frame.title = title || cfg.title;
 
         if (fadeIn) {
