@@ -82,6 +82,28 @@ const pages2025 = [
 
 ];
 
+// Every gallery path above is written relative to this file's folder. Pages
+// that live in a subfolder (/reports/*.html) would otherwise resolve them to
+// /reports/images/... and 404, so normalise them once, here.
+const SCRIPT_BASE = (() => {
+  try {
+    const src = document.currentScript && document.currentScript.src;
+    if (src) return src.slice(0, src.lastIndexOf('/') + 1);
+  } catch (e) {}
+  return '';
+})();
+
+function resolveAssetUrl(path) {
+  const value = String(path || '');
+  if (!value || /^([a-z][a-z0-9+.-]*:|\/\/|\/|#)/i.test(value)) return value;
+  return SCRIPT_BASE + value;
+}
+
+[pages2022, pages2024, pages2025].forEach((list) => {
+  for (let i = 0; i < list.length; i += 1) list[i] = resolveAssetUrl(list[i]);
+});
+
+
 function buildPageRecords(year, imageList) {
   return imageList.map((image, index) => ({
     image,
@@ -1351,7 +1373,8 @@ window.addEventListener('resize', () => {
 });
 
 setupPageNavigation();
-preloadBasePages();
+// Only the yearbook page needs these images; other pages just wasted requests.
+if (document.querySelector('.yearbook-library-section')) preloadBasePages();
 
 const slides = document.querySelectorAll('.carousel-slide');
 const nextButton = document.querySelector('.carousel-control.next');

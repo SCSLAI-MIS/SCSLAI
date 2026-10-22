@@ -18,7 +18,7 @@ Games/
 `Games/game-control.js` holds exactly one line:
 
 ```js
-const ACTIVE_GAME = "star";
+const ACTIVE_GAME = "heart";   // current setting — Game 2 is live
 ```
 
 | `ACTIVE_GAME` | What players see |
@@ -69,9 +69,11 @@ there immediately without scrolling the tall form.
 
 3. Save and hard-refresh the site (`Ctrl+F5` / `Cmd+Shift+R`).
 
-Nothing else to comment, uncomment or delete. If `game-control.js` is missing
-or the value is anything other than `"heart"`, both scripts fall back to the
-star hunt.
+Nothing else to comment, uncomment or delete. If `game-control.js` is missing,
+or the value is anything other than exactly `"star"` or `"heart"`, **both**
+hunts stay switched off (empty `""`, typos like `"hearts"`, and capitalised
+values all produce no stars and no hearts). See the `activeGameName()` checks
+at the top of `star-game.js` / `heart-game.js`.
 
 ### Which pages load what
 
