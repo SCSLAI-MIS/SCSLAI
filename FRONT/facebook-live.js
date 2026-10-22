@@ -36,7 +36,8 @@
         title: 'SCSLAI Live',
         previewWidth: 320,
         autoplayPreview: true,
-        dismissForSession: true
+        dismissForSession: true,
+        showLiveBadge: 'auto'
     };
 
     var DISMISS_KEY = 'scslai-fb-live-dismissed';
@@ -284,8 +285,19 @@
         } catch (err) {}
     }
 
+    /* 'auto'   = badge only while YouTube confirms the stream is on air
+       'always' = badge inside the scheduled window, even on providers we
+                  cannot verify (Facebook)
+       'never'  = never show the badge */
+    function liveBadgeVisible() {
+        var mode = String(cfg.showLiveBadge || 'auto').toLowerCase();
+        if (mode === 'never') { return false; }
+        if (mode === 'always') { return inSchedule(new Date()); }
+        return liveStatus === 'live';
+    }
+
     function applyLiveStatus() {
-        var live = liveStatus === 'live';
+        var live = liveBadgeVisible();
 
         if (widget) { widget.classList.toggle('is-offline', !live); }
         if (modal) { modal.classList.toggle('is-offline', !live); }
