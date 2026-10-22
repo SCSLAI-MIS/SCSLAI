@@ -1,0 +1,681 @@
+/* =========================================================================
+   SCSLAI — FLOATING FACEBOOK LIVE WINDOW  (styles)
+   -------------------------------------------------------------------------
+   Every rule below is scoped to the widget's own IDs / class names, so it
+   cannot change any other part of the website.
+   Markup is created by facebook-live.js. Settings: facebook-live-config.js.
+   ========================================================================= */
+
+#scslai-fb-live,
+#scslai-fb-live *,
+.scslai-fb-live-modal,
+.scslai-fb-live-modal * {
+    box-sizing: border-box;
+}
+
+#scslai-fb-live[hidden],
+.scslai-fb-live-modal[hidden] {
+    display: none !important;
+}
+
+/* -------------------------------------------------------------------------
+   FLOATING PREVIEW (lower-right corner, every page)
+   ------------------------------------------------------------------------- */
+
+#scslai-fb-live {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 9000;              /* raised inline from config; stays below the
+                                   site's own modals (9999+) on purpose      */
+    width: var(--scslai-fb-live-width, 320px);
+    max-width: calc(100vw - 24px);
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #ffffff;
+    text-align: left;
+    -webkit-animation: scslaiFbLiveRise 0.38s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    animation: scslaiFbLiveRise 0.38s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@-webkit-keyframes scslaiFbLiveRise {
+    from { opacity: 0; -webkit-transform: translateY(14px) scale(0.97); }
+    to   { opacity: 1; -webkit-transform: translateY(0) scale(1); }
+}
+
+@keyframes scslaiFbLiveRise {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.scslai-fb-live__card {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(216, 189, 116, 0.45);
+    border-radius: 14px;
+    background: #0a1c15;
+    box-shadow:
+        0 16px 38px rgba(0, 0, 0, 0.45),
+        0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.scslai-fb-live__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #000000;
+}
+
+/* Loading placeholder (sits behind the player) */
+.scslai-fb-live__placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
+    background: radial-gradient(120% 120% at 50% 0%, #143529 0%, #07130e 72%);
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+
+.scslai-fb-live__spinner {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    border-top-color: #d8bd74;
+    border-radius: 50%;
+    -webkit-animation: scslaiFbLiveSpin 0.9s linear infinite;
+    animation: scslaiFbLiveSpin 0.9s linear infinite;
+}
+
+@-webkit-keyframes scslaiFbLiveSpin {
+    to { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes scslaiFbLiveSpin {
+    to { transform: rotate(360deg); }
+}
+
+
+/* The real Facebook Live player (small size) */
+.scslai-fb-live__iframe {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #000000;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    /* Clicks are handled by the "Watch larger" button on top of it, so the
+       tiny preview always opens the big popup. */
+    pointer-events: none;
+}
+
+.scslai-fb-live__iframe.is-ready {
+    opacity: 1;
+}
+
+/* Full-surface click target */
+.scslai-fb-live__open {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.scslai-fb-live__open::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+        rgba(0, 0, 0, 0.22) 0%,
+        rgba(0, 0, 0, 0) 42%,
+        rgba(0, 0, 0, 0.38) 100%);
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.scslai-fb-live__open:hover::after,
+.scslai-fb-live__open:focus-visible::after {
+    opacity: 1;
+}
+
+.scslai-fb-live__open:focus-visible {
+    outline: 2px solid #f0d27a;
+    outline-offset: -2px;
+}
+
+.scslai-fb-live__hint {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    background: rgba(8, 12, 10, 0.68);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+
+.scslai-fb-live__hint svg {
+    display: block;
+    width: 10px;
+    height: 10px;
+}
+
+.scslai-fb-live__open:hover .scslai-fb-live__hint,
+.scslai-fb-live__open:focus-visible .scslai-fb-live__hint {
+    background: rgba(216, 189, 116, 0.96);
+    color: #12221b;
+    transform: translateY(-1px);
+}
+
+/* LIVE badge */
+.scslai-fb-live__badge,
+.scslai-fb-live-modal__badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(8, 12, 10, 0.72);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: #ffffff;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    line-height: 1;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.scslai-fb-live__dot {
+    display: block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff2d55;
+    -webkit-animation: scslaiFbLivePulse 1.8s infinite;
+    animation: scslaiFbLivePulse 1.8s infinite;
+}
+
+@-webkit-keyframes scslaiFbLivePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(255, 45, 85, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0); }
+}
+
+@keyframes scslaiFbLivePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(255, 45, 85, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0); }
+}
+
+/* Small round close (hide) button */
+.scslai-fb-live__close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    background: rgba(8, 12, 10, 0.72);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.scslai-fb-live__close svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+}
+
+.scslai-fb-live__close:hover {
+    background: rgba(190, 30, 45, 0.94);
+    border-color: transparent;
+}
+
+.scslai-fb-live__close:focus-visible {
+    outline: 2px solid #f0d27a;
+    outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------
+   LARGE POPUP (opened by clicking the preview)
+   ------------------------------------------------------------------------- */
+
+.scslai-fb-live-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9500;              /* below the site's form modals (99999+) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: clamp(10px, 3vw, 32px);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.35;
+    color: #ffffff;
+    text-align: left;
+}
+
+.scslai-fb-live-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(4, 10, 8, 0.84);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+}
+
+.scslai-fb-live-modal__card {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(1040px, 100%, calc((100vh - 160px) * 1.7778));
+    max-height: 100%;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(216, 189, 116, 0.35);
+    border-radius: 16px;
+    background: #0a1c15;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    -webkit-animation: scslaiFbLivePop 0.26s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    animation: scslaiFbLivePop 0.26s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@-webkit-keyframes scslaiFbLivePop {
+    from { opacity: 0; -webkit-transform: translateY(10px) scale(0.985); }
+    to   { opacity: 1; -webkit-transform: translateY(0) scale(1); }
+}
+
+@keyframes scslaiFbLivePop {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.scslai-fb-live-modal__head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px 10px 14px;
+    background: linear-gradient(180deg, #103127 0%, #0a1c15 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Badge inside the header flows with the flex row instead of overlaying */
+.scslai-fb-live-modal__badge {
+    position: static;
+    top: auto;
+    left: auto;
+    z-index: auto;
+    flex: 0 0 auto;
+    border-color: rgba(255, 45, 85, 0.45);
+    background: rgba(255, 45, 85, 0.14);
+    color: #ffb3c1;
+}
+
+.scslai-fb-live-modal__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    color: #f7f3e8;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scslai-fb-live-modal__link {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 9px;
+    border: 1px solid rgba(216, 189, 116, 0.32);
+    border-radius: 8px;
+    background: rgba(216, 189, 116, 0.1);
+    color: #ecd896;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.scslai-fb-live-modal__link svg {
+    display: block;
+    width: 11px;
+    height: 11px;
+}
+
+.scslai-fb-live-modal__link:hover,
+.scslai-fb-live-modal__link:focus-visible {
+    background: rgba(216, 189, 116, 0.24);
+    color: #fff6d8;
+}
+
+.scslai-fb-live-modal__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.scslai-fb-live-modal__close svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+}
+
+.scslai-fb-live-modal__close:hover {
+    background: rgba(190, 30, 45, 0.94);
+    border-color: transparent;
+}
+
+.scslai-fb-live-modal__close:focus-visible,
+.scslai-fb-live-modal__link:focus-visible {
+    outline: 2px solid #f0d27a;
+    outline-offset: 2px;
+}
+
+.scslai-fb-live-modal__frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #000000;
+}
+
+.scslai-fb-live-modal__frame .scslai-fb-live__iframe {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+/* -------------------------------------------------------------------------
+   FALLBACK when the configured link cannot be embedded
+   (e.g. facebook.com/share/... or fb.watch short links)
+   ------------------------------------------------------------------------- */
+
+.scslai-fb-live__notice {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 22px 20px 38px;
+    background: radial-gradient(120% 120% at 50% 0%, #143529 0%, #07130e 72%);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 10px;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.scslai-fb-live__notice strong {
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.scslai-fb-live__notice span {
+    max-width: 230px;
+}
+
+.scslai-fb-live-modal__notice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    background: radial-gradient(120% 120% at 50% 0%, #143529 0%, #0a1c15 75%);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.scslai-fb-live-modal__notice strong {
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.scslai-fb-live-modal__notice span {
+    max-width: 460px;
+}
+
+.scslai-fb-live-modal__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: #d8bd74;
+    color: #12221b;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.18s ease;
+}
+
+.scslai-fb-live-modal__cta svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+}
+
+.scslai-fb-live-modal__cta:hover {
+    background: #efd892;
+}
+
+.scslai-fb-live-modal__cta:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+
+/* -------------------------------------------------------------------------
+   RESPONSIVE
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+    #scslai-fb-live {
+        right: 10px;
+        bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+        width: 300px;
+        max-width: calc(100vw - 20px);
+    }
+}
+
+@media (max-width: 380px) {
+    #scslai-fb-live {
+        width: calc(100vw - 20px);
+    }
+}
+
+/* Short landscape phones: keep the preview compact */
+@media (max-height: 460px) and (orientation: landscape) {
+    #scslai-fb-live {
+        right: 10px;
+        bottom: 10px;
+        width: 230px;
+    }
+
+    .scslai-fb-live__hint {
+        display: none;
+    }
+}
+
+/* Mobile popup: full-width 16:9 player, vertically centred */
+@media (max-width: 640px) {
+    .scslai-fb-live-modal {
+        padding: 10px;
+    }
+
+    .scslai-fb-live-modal__card {
+        width: 100%;
+        height: auto;
+        max-height: none;
+        border-radius: 14px;
+    }
+
+    .scslai-fb-live-modal__head {
+        gap: 8px;
+        padding: 8px 10px;
+    }
+
+    .scslai-fb-live-modal__title {
+        display: none;               /* the dialog keeps its accessible name */
+    }
+
+    .scslai-fb-live-modal__link {
+        margin-left: auto;
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .scslai-fb-live-modal__frame {
+        flex: 0 0 auto;
+        aspect-ratio: 16 / 9;
+    }
+
+    .scslai-fb-live-modal__notice {
+        gap: 6px;
+        padding: 14px;
+        font-size: 11.5px;
+        line-height: 1.4;
+    }
+
+    .scslai-fb-live-modal__notice strong {
+        font-size: 14px;
+    }
+
+    .scslai-fb-live-modal__cta {
+        margin-top: 2px;
+        padding: 8px 12px;
+        font-size: 11.5px;
+    }
+}
+
+/* Scroll lock used while the popup is open */
+html.scslai-fb-live-lock,
+body.scslai-fb-live-lock {
+    overflow: hidden !important;
+}
+
+/* -------------------------------------------------------------------------
+   ACCESSIBILITY / PRINT
+   ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    #scslai-fb-live,
+    .scslai-fb-live-modal__card {
+        -webkit-animation: none;
+        animation: none;
+    }
+
+    .scslai-fb-live__dot,
+    .scslai-fb-live__spinner {
+        -webkit-animation: none;
+        animation: none;
+    }
+
+    .scslai-fb-live__open::after,
+    .scslai-fb-live__open:hover .scslai-fb-live__hint,
+    .scslai-fb-live__open:focus-visible .scslai-fb-live__hint {
+        transition: none;
+        transform: none;
+    }
+}
+
+@media print {
+    #scslai-fb-live,
+    .scslai-fb-live-modal {
+        display: none !important;
+    }
+}
