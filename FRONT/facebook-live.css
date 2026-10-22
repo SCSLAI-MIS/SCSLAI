@@ -378,6 +378,18 @@
     }
 }
 
+/* The LIVE badge is only rendered while the stream is really broadcasting.
+   When it is offline (a replay/VOD) or not yet known, no badge is shown at
+   all — we never print a "Not live" label. */
+.scslai-fb-live.is-offline .scslai-fb-live__badge,
+.scslai-fb-live-modal.is-offline .scslai-fb-live-modal__badge {
+    display: none;
+}
+
+#scslai-fb-live-pill.is-offline .scslai-fb-live__dot {
+    display: none;
+}
+
 /* -------------------------------------------------------------------------
    LARGE POPUP (opened by clicking the preview)
    ------------------------------------------------------------------------- */
