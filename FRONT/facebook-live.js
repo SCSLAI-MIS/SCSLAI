@@ -36,7 +36,8 @@
         title: 'SCSLAI Live',
         previewWidth: 320,
         autoplayPreview: true,
-        dismissForSession: true
+        dismissForSession: true,
+        showLiveBadge: 'auto'
     };
 
     var DISMISS_KEY = 'scslai-fb-live-dismissed';
@@ -54,6 +55,8 @@
     var forceHide = false;
 
     var widget = null;
+    var pill = null;
+    var userMinimized = false;
     var mediaEl = null;
     var previewFrame = null;
     var previewBuiltWidth = 0;
@@ -63,6 +66,7 @@
     var lastFocus = null;
     var resizeTimer = null;
     var tickTimer = null;
+    var statusTimer = null;
     var scrollLock = null;
     var previewNotice = null;
     var embeddable = true;
@@ -248,15 +252,153 @@
     }
 
     /* ------------------------------------------------------------------
+       Real "is it live?" status
+       The embed's own player posts its video data to us (it needs
+       enablejsapi=1). That data carries a real isLive flag, so the LIVE
+       badge is shown only while the stream is actually broadcasting — when
+       it is offline (a replay/VOD) the badge is simply not rendered. No
+       extra API key, script or player is needed.
+       ------------------------------------------------------------------ */
+
+    var STATUS_KEY = 'scslai-fb-live-status';
+    var STATUS_TTL = 5 * 60 * 1000;
+    var liveStatus = 'unknown';          // 'live' | 'offline' | 'unknown'
+    var statusChannel = 'scslai-' + Math.random().toString(36).slice(2, 9);
+    var offlineVotes = 0;                // consecutive "not live" reports
+    var liveConfirmedAt = 0;             // when "live" was last confirmed
+
+    function readStoredStatus() {
+        if (provider !== 'youtube') { return; }
+        try {
+            var raw = window.sessionStorage.getItem(STATUS_KEY);
+            if (!raw) { return; }
+            var parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed.live !== 'boolean') { return; }
+            if (Date.now() - parsed.at > STATUS_TTL) { return; }
+            liveStatus = parsed.live ? 'live' : 'offline';
+        } catch (err) {}
+    }
+
+    function storeStatus(live) {
+        try {
+            window.sessionStorage.setItem(STATUS_KEY, JSON.stringify({ live: live, at: Date.now() }));
+        } catch (err) {}
+    }
+
+    /* 'auto'   = badge only while YouTube confirms the stream is on air
+       'always' = badge inside the scheduled window, even on providers we
+                  cannot verify (Facebook)
+       'never'  = never show the badge */
+    function liveBadgeVisible() {
+        var mode = String(cfg.showLiveBadge || 'auto').toLowerCase();
+        if (mode === 'never') { return false; }
+        if (mode === 'always') { return inSchedule(new Date()); }
+        return liveStatus === 'live';
+    }
+
+    function applyLiveStatus() {
+        var live = liveBadgeVisible();
+
+        if (widget) { widget.classList.toggle('is-offline', !live); }
+        if (modal) { modal.classList.toggle('is-offline', !live); }
+
+        if (pill) {
+            pill.classList.toggle('is-offline', !live);
+            var label = pill.querySelector('.scslai-fb-live-pill__label');
+            if (label) { label.textContent = live ? 'Live' : 'Watch'; }
+            pill.setAttribute('aria-label', live ? 'Show the live video' : 'Show the video');
+            pill.setAttribute('title', live ? 'Show the live video' : 'Show the video');
+        }
+    }
+
+    function setLiveStatus(live) {
+        storeStatus(live);
+        var next = live ? 'live' : 'offline';
+        if (liveStatus === next) { return; }
+        liveStatus = next;
+        applyLiveStatus();
+    }
+
+    /* Ask the YouTube embed to send its state; it replies with infoDelivery. */
+    function requestLiveStatus(frame) {
+        if (provider !== 'youtube' || !frame) { return; }
+        try {
+            if (!frame.contentWindow) { return; }
+            frame.contentWindow.postMessage(JSON.stringify({
+                event: 'listening',
+                id: 'scslai-fb-live',
+                channel: statusChannel
+            }), '*');
+        } catch (err) {}
+    }
+
+    function noteLive(isLive, playerState) {
+        if (isLive) {
+            liveConfirmedAt = Date.now();
+            offlineVotes = 0;
+            setLiveStatus(true);
+            return;
+        }
+
+        /* A player that is only buffering (state 3) reports isLive:false even
+           for a real live stream, so wait until it has actually resolved the
+           video: 1 = playing, 2 = paused. */
+        var resolved = playerState === 1 || playerState === 2;
+        if (!resolved) { return; }
+
+        /* A paused large-view player also reports false; never let it cancel a
+           "live" we just confirmed. The 30s re-request keeps this fresh. */
+        if (liveStatus === 'live' && Date.now() - liveConfirmedAt < 15000) { return; }
+
+        offlineVotes = 0;
+        setLiveStatus(false);
+    }
+
+    window.addEventListener('message', function (event) {
+        if (provider !== 'youtube') { return; }
+        var host = '';
+        try { host = new URL(event.origin).hostname; } catch (err) { return; }
+        if (!/(^|\.)youtube(-nocookie)?\.com$/.test(host)) { return; }
+
+        var data = null;
+        try {
+            data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        } catch (err) {
+            return;
+        }
+
+        var video = data && data.info && data.info.videoData;
+        if (video && typeof video.isLive === 'boolean') {
+            noteLive(video.isLive, data.info.playerState);
+        }
+    });
+
+
+
+    /* ------------------------------------------------------------------
        Embedded player (YouTube or Facebook)
        ------------------------------------------------------------------ */
 
     function frameSrc(width, height, autoplay, muted) {
         if (provider === 'youtube') {
-            return 'https://www.youtube.com/embed/' + youtubeVideoId +
-                '?autoplay=' + (autoplay ? '1' : '0') +
+            var params =
+                'autoplay=' + (autoplay ? '1' : '0') +
                 '&mute=' + (muted ? '1' : '0') +
-                '&playsinline=1&rel=0';
+                '&playsinline=1&rel=0' +
+                '&enablejsapi=1'; /* lets the player report isLive back to us */
+
+            /* YouTube refuses to play with "Error 153 / Video player
+               configuration error" when the embed request carries no Referer.
+               Passing our own origin lets the player validate the embed even
+               on hosts that strip the Referer (VS Code dev tunnels, strict
+               Referrer-Policy headers). file:// has no usable origin. */
+            try {
+                if (/^https?:$/.test(window.location.protocol)) {
+                    params += '&origin=' + encodeURIComponent(window.location.origin);
+                }
+            } catch (err) {}
+
+            return 'https://www.youtube.com/embed/' + youtubeVideoId + '?' + params;
         }
 
         return PLUGIN_ENDPOINT +
@@ -278,6 +420,10 @@
         frame.setAttribute('scrolling', 'no');
         frame.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share');
         frame.setAttribute('allowfullscreen', 'true');
+        /* Force a Referer on the embed request. Hosts that send
+           "Referrer-Policy: no-referrer" (e.g. dev tunnels) break YouTube
+           embeds with Error 153; an iframe-level policy overrides the page. */
+        frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
         frame.title = title || cfg.title;
 
         if (fadeIn) {
@@ -287,6 +433,11 @@
         } else {
             frame.classList.add('is-ready');
         }
+
+        /* Every embed also reports its own live state back to us. */
+        frame.addEventListener('load', function () {
+            requestLiveStatus(frame);
+        });
 
         return frame;
     }
@@ -318,7 +469,7 @@
                         '<span class="scslai-fb-live__hint">' + ICON_EXPAND + '<span>Watch larger</span></span>' +
                     '</button>' +
                     '<span class="scslai-fb-live__badge"><span class="scslai-fb-live__dot"></span>Live</span>' +
-                    '<button type="button" class="scslai-fb-live__close" aria-label="Hide the live video" title="Hide">' +
+                    '<button type="button" class="scslai-fb-live__close" aria-label="Minimise the live video" title="Minimise">' +
                         ICON_CLOSE +
                     '</button>' +
                 '</div>' +
@@ -383,13 +534,80 @@
         }
         widget.hidden = false;
         if (!previewFrame && !previewNotice) { mountPreview(); }
+        applyLiveStatus();
     }
 
     function hideWidget(byUser) {
-        if (byUser) { rememberDismissal(); }
+        if (byUser) {
+            userMinimized = true;
+            rememberDismissal();
+        }
         closeModal(false);
         destroyPreview();
         if (widget) { widget.hidden = true; }
+        if (byUser) { showPill(); }
+    }
+
+    /* ------------------------------------------------------------------
+       Minimised "LIVE" pill
+       Tapping the × no longer makes the video vanish: the player collapses
+       into this small corner button, and tapping it brings the preview back.
+       ------------------------------------------------------------------ */
+
+    function buildPill() {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.id = 'scslai-fb-live-pill';
+        button.className = 'scslai-fb-live-pill';
+        button.setAttribute('aria-label', 'Show the live video');
+        button.setAttribute('title', 'Show ' + (cfg.title || 'the live video'));
+        button.innerHTML =
+            '<span class="scslai-fb-live__dot" aria-hidden="true"></span>' +
+            '<span class="scslai-fb-live-pill__label">Live</span>' +
+            '<span class="scslai-fb-live-pill__chevron" aria-hidden="true">' + ICON_EXPAND + '</span>';
+
+        button.addEventListener('click', function (event) {
+            event.preventDefault();
+            restoreWidget();
+        });
+
+        return button;
+    }
+
+    function showPill() {
+        if (forceHide || cfg.enabled === false || !liveUrl) { return; }
+        if (!pill) { pill = buildPill(); }
+        if (!document.body.contains(pill)) { document.body.appendChild(pill); }
+        pill.hidden = false;
+        applyLiveStatus();
+    }
+
+    function hidePill() {
+        if (pill) { pill.hidden = true; }
+    }
+
+    function restoreWidget() {
+        /* Un-minimise: forget the dismissal so it stays open on later pages. */
+        userMinimized = false;
+        try { window.sessionStorage.removeItem(DISMISS_KEY); } catch (err) {}
+        hidePill();
+        showWidget();
+
+        var open = widget ? widget.querySelector('.scslai-fb-live__open') : null;
+        if (open && open.focus) {
+            try { open.focus({ preventScroll: true }); } catch (err) { open.focus(); }
+        }
+    }
+
+    /* True while the visitor minimised the window but the live session is
+       still inside its scheduled window: show the pill, not the preview. */
+    function isMinimized() {
+        if (forceHide) { return false; }
+        if (cfg.enabled === false || !liveUrl) { return false; }
+        /* An explicit tap on × always wins, even with ?fblive=1. */
+        if (userMinimized) { return inSchedule(new Date()); }
+        if (forceShow) { return false; }
+        return isDismissed() && inSchedule(new Date());
     }
 
 
@@ -434,6 +652,7 @@
             closeModal(true);
         });
 
+        applyLiveStatus();
         return modal;
     }
 
@@ -590,11 +809,21 @@
     function tick() {
         if (document.hidden) { return; }
 
+        /* Minimised by the visitor: collapse the player into the LIVE pill. */
+        if (isMinimized()) {
+            if (modal && !modal.hidden) { closeModal(false); }
+            if (widget && !widget.hidden) { hideWidget(false); }
+            showPill();
+            return;
+        }
+
         if (shouldShow()) {
+            hidePill();
             showWidget();
             return;
         }
 
+        hidePill();
         if (modal && !modal.hidden) {
             closeModal(false);
         }
@@ -633,6 +862,10 @@
         readQueryFlag();
         resolveConfig();
 
+        /* Last known live state (kept per tab) so the badge is right even
+           before the embed has answered, and while it is minimised. */
+        readStoredStatus();
+
         if (!liveUrl) {
             console.warn('[Live video] No liveUrl set in facebook-live-config.js — the floating window is disabled.');
             return;
@@ -647,24 +880,43 @@
         if (tickTimer) { clearInterval(tickTimer); }
         tickTimer = setInterval(tick, 30000);
 
+        /* Keep the live badge honest: re-ask the embed every 30s. */
+        if (statusTimer) { clearInterval(statusTimer); }
+        statusTimer = setInterval(function () {
+            requestLiveStatus(previewFrame);
+            requestLiveStatus(modalFrame);
+        }, 30000);
+
         window.addEventListener('resize', handleResize);
         window.addEventListener('orientationchange', handleResize);
 
         document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) { tick(); }
+            if (!document.hidden) {
+                tick();
+                requestLiveStatus(previewFrame);
+                requestLiveStatus(modalFrame);
+            }
         });
 
         window.addEventListener('pageshow', function (event) {
-            if (event.persisted) { tick(); }
+            if (event.persisted) {
+                tick();
+                requestLiveStatus(previewFrame);
+                requestLiveStatus(modalFrame);
+            }
         });
 
         /* Small handy API for testing from the console:
-           SCSLAI_FACEBOOK_LIVE_WIDGET.open() / .close() / .hide() / .refresh() */
+           SCSLAI_FACEBOOK_LIVE_WIDGET.open() / .close() / .minimize() /
+           .restore() / .hide() / .refresh() / .isLive() */
         window.SCSLAI_FACEBOOK_LIVE_WIDGET = {
             refresh: tick,
             open: openModal,
             close: function () { closeModal(true); },
-            hide: function () { hideWidget(true); }
+            minimize: function () { hideWidget(true); },
+            restore: restoreWidget,
+            hide: function () { hideWidget(true); hidePill(); },
+            isLive: function () { return liveStatus; }
         };
     }
 

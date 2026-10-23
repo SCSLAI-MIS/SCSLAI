@@ -67,17 +67,17 @@ window.SCSLAI_FACEBOOK_LIVE = {
     /* ---------------------------------------------------------------------
        1) VIDEO LINK  ←←← PASTE YOUR LINK HERE (YouTube or Facebook)
        --------------------------------------------------------------------- */
-    liveUrl: 'https://www.youtube.com/watch?v=lY5OeYZy2KM',
+    liveUrl: 'https://www.facebook.com/61555295043241/videos/1617556620107041/',
 
     /* ---------------------------------------------------------------------
        2) SHOW FROM  (start date & time)
        --------------------------------------------------------------------- */
-    startDateTime: '2026-10-21T08:00:00+08:00',
+    startDateTime: '',
 
     /* ---------------------------------------------------------------------
        3) SHOW UNTIL  (end date & time)
        --------------------------------------------------------------------- */
-    endDateTime: '2026-10-21T20:00:00+08:00',
+    endDateTime: '',
 
     /* ---------------------------------------------------------------------
        OPTIONAL SETTINGS — safe to leave exactly as they are
@@ -96,7 +96,16 @@ window.SCSLAI_FACEBOOK_LIVE = {
     // when muted, so the preview is muted; the large popup plays with sound.
     autoplayPreview: true,
 
-    // Once a visitor clicks the close (×) button, keep it hidden for the
-    // rest of that browser tab/session (a new tab shows it again).
-    dismissForSession: true
+    // The × now MINIMISES the player into a small "LIVE" pill that the
+    // visitor can tap to reopen. This remembers that choice for the
+    // tab/session (a new tab opens the player again).
+    dismissForSession: true,
+
+    // LIVE badge behaviour:
+    //   'auto'   = show the badge only while YouTube confirms the stream is
+    //              really on air (replays and Facebook links never show it)
+    //   'always' = always show it inside the scheduled window — use this for
+    //              Facebook live streams, which cannot be verified from a page
+    //   'never'  = never show it
+    showLiveBadge: 'auto'
 };
