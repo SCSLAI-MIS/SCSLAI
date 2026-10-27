@@ -20,4 +20,5 @@ package.json
 package-lock.json
 FRONT/scslaicares-qa.html
 qa-forms.js
+qa-covers.js
 qa-results-forms/

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCSLAIcares - SCSLAI</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="scslaicares.css?v=20260903h">
+    <link rel="stylesheet" href="scslaicares.css?v=20261027b">
     <!-- ANNIVERSARY GAMES (temporary) — switch hunts with ONE line in
          Games/game-control.js:  const ACTIVE_GAME = "heart";  (or "star").
          Delete the whole Games/ folder after the anniversary. -->
@@ -61,22 +61,51 @@
                         <div class="yearbook-grid" role="list" aria-label="Digital yearbook collection">
                             <button class="yearbook-book" type="button" data-yearbook-index="0" aria-label="Open the 2025 edition">
                                 <span class="yearbook-cover" aria-hidden="true">
-                                    <img src="images/gallery/outreach/OUTREACH.png" alt="Cover for the 2025 edition of the yearbook">
+                                    <span class="cover-head">
+                                        <span class="cover-kicker">SCSLAI Cares</span>
+                                        <span class="cover-wordmark">Yearbook</span>
+                                        <span class="cover-year">2025</span>
+                                    </span>
+                                    <span class="cover-plate">
+                                        <img src="images/gallery/outreach/OUTREACH.png" alt="Cover for the 2025 edition of the yearbook">
+                                    </span>
+                                    <span class="cover-foot">
+                                        <span class="cover-motto">Serving with Compassion</span>
+                                    </span>
                                 </span>
                                 <span class="book-title">2025 Edition</span>
                             </button>
 
-                             <button class="yearbook-book" type="button" data-yearbook-index="1" aria-label="Open the 2024 edition">
+                            <button class="yearbook-book" type="button" data-yearbook-index="1" aria-label="Open the 2024 edition">
                                 <span class="yearbook-cover" aria-hidden="true">
-                                    <img src="images/gallery/Tree planting/tree-planting.jpg" alt="Cover for the 2024 edition of the yearbook">
+                                    <span class="cover-head">
+                                        <span class="cover-kicker">SCSLAI Cares</span>
+                                        <span class="cover-wordmark">Yearbook</span>
+                                        <span class="cover-year">2024</span>
+                                    </span>
+                                    <span class="cover-plate">
+                                        <img src="images/gallery/Tree planting/tree-planting.jpg" alt="Cover for the 2024 edition of the yearbook">
+                                    </span>
+                                    <span class="cover-foot">
+                                        <span class="cover-motto">Growing a Greener Future</span>
+                                    </span>
                                 </span>
                                 <span class="book-title">2024 Edition</span>
                             </button>
 
-                            
                             <button class="yearbook-book" type="button" data-yearbook-index="2" aria-label="Open the 2022 edition">
                                 <span class="yearbook-cover" aria-hidden="true">
-                                    <img src="images/gallery/silungan/SCSLAI.png" alt="Cover for the 2022 edition of the yearbook">
+                                    <span class="cover-head">
+                                        <span class="cover-kicker">SCSLAI Cares</span>
+                                        <span class="cover-wordmark">Yearbook</span>
+                                        <span class="cover-year cover-year-range">2022&ndash;2023</span>
+                                    </span>
+                                    <span class="cover-plate">
+                                        <img src="images/gallery/silungan/SCSLAI.png" alt="Cover for the 2022 edition of the yearbook">
+                                    </span>
+                                    <span class="cover-foot">
+                                        <span class="cover-motto">Silungan ng Pag-asa</span>
+                                    </span>
                                 </span>
                                 <span class="book-title">2022-2023 Edition</span>
                             </button>
@@ -138,10 +167,8 @@
                     <div class="book-opening" id="book-opening" role="dialog" aria-modal="true" aria-labelledby="book-opening-label" aria-hidden="true" hidden>
                         <div class="book-opening-panel">
                             <p class="book-opening-label" id="book-opening-label" data-book-opening-label>Opening yearbook</p>
-                            <video class="book-opening-video" id="book-opening-video" playsinline muted preload="auto" aria-hidden="true">
-                                <source src="animation/Book.mp4" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
+                            <!-- The opening book is built here by animation/book-animation.js. -->
+                            <div class="book-opening-stage" id="book-opening-stage" aria-hidden="true"></div>
                         </div>
                     </div>
 
@@ -203,7 +230,8 @@
             <p>&copy; 2026 SCSLAI. All rights reserved.</p>
         </div>
     </footer>
-    <script src="script.js?v=20260925a"></script>
+    <script src="animation/book-animation.js?v=1"></script>
+    <script src="script.js?v=20261027a"></script>
     <script src="Games/game-control.js"></script>
     <script src="Games/heart-game.js"></script>
     <script src="facebook-live.js?v=9"></script>
