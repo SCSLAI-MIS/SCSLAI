@@ -991,6 +991,36 @@ nav a:hover,
     border-left: 0;
 }
 
+/* Page-stack edges. A bound volume shows the layered fore-edges of its paper
+   block along the outside of both halves; without them the open spread reads as
+   two flat cards. z-index lifts them above the page's own edge shading. */
+#flipbook .book-half.left::before,
+#flipbook .book-half.right::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 7px;
+    z-index: 3;
+    pointer-events: none;
+    background: repeating-linear-gradient(90deg, rgba(120, 96, 64, 0.42) 0 1px, rgba(255, 252, 242, 0.95) 1px 2.4px);
+    box-shadow:
+        inset 0 0 6px rgba(90, 62, 30, 0.3),
+        inset -1px 0 0 rgba(255, 255, 255, 0.28);
+}
+
+#flipbook .book-half.left::before {
+    left: 0;
+}
+
+#flipbook .book-half.right::after {
+    right: 0;
+    /* Mirrored highlight: the outer edge of the right half faces the light. */
+    box-shadow:
+        inset 0 0 6px rgba(90, 62, 30, 0.3),
+        inset 1px 0 0 rgba(255, 255, 255, 0.28);
+}
+
 #flipbook .turn-sheet {
     position: absolute;
     top: 0;
@@ -1112,9 +1142,11 @@ nav a:hover,
         radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 42%),
         repeating-linear-gradient(0deg, rgba(134, 90, 43, 0.05) 0 1px, transparent 1px 4px),
         #efd7af;
-    border: 1px solid rgba(73, 57, 39, 0.26);
+    /* The boards overhang the paper block, exactly like the shelf cover. */
+    border: 3px solid rgba(58, 42, 26, 0.52);
     box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+        inset 0 0 20px rgba(52, 32, 12, 0.3),
         /* Stacked page edges: layered offsets below the book mimic the
            thickness of a real bound volume. */
         0 1px 0 #d9c49a,
@@ -1122,11 +1154,26 @@ nav a:hover,
         0 3px 0 #bda77d,
         0 5px 0 #ab9569,
         0 8px 0 #97805a,
-        0 12px 22px rgba(44, 29, 17, 0.32);
-    border-radius: 10px;
+        0 12px 0 #836d4a,
+        0 22px 36px rgba(30, 18, 8, 0.42);
+    border-radius: 12px;
     backface-visibility: hidden;
     transform: translateZ(0);
     will-change: transform;
+}
+
+/* Bottom edge of the same paper block, showing under the boards. */
+#flipbook .book3d::after {
+    content: "";
+    position: absolute;
+    left: 9px;
+    right: 9px;
+    bottom: 0;
+    height: 7px;
+    z-index: 3;
+    pointer-events: none;
+    background: repeating-linear-gradient(180deg, rgba(120, 96, 64, 0.38) 0 1px, rgba(255, 252, 242, 0.95) 1px 2.4px);
+    box-shadow: inset 0 0 6px rgba(90, 62, 30, 0.28);
 }
 
 /* Bound-spine crease down the centre of the open book. */
@@ -1136,13 +1183,13 @@ nav a:hover,
     top: 0;
     bottom: 0;
     left: 50%;
-    width: 26px;
+    width: 30px;
     transform: translateX(-50%);
     background: linear-gradient(to right,
         rgba(64, 42, 22, 0) 0%,
-        rgba(64, 42, 22, 0.14) 42%,
-        rgba(64, 42, 22, 0.26) 50%,
-        rgba(64, 42, 22, 0.14) 58%,
+        rgba(64, 42, 22, 0.16) 40%,
+        rgba(64, 42, 22, 0.32) 50%,
+        rgba(64, 42, 22, 0.16) 60%,
         rgba(64, 42, 22, 0) 100%);
     pointer-events: none;
     z-index: 60;
