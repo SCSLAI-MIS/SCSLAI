@@ -331,16 +331,25 @@ const photoLightboxImage = photoLightbox?.querySelector('[data-photo-image]') ||
 const photoLightboxCaption = photoLightbox?.querySelector('[data-photo-caption]') || null;
 const photoLightboxCounter = photoLightbox?.querySelector('[data-photo-counter]') || null;
 
+// The lightbox walks only pages that actually carry artwork. The reader's page
+// 1 is the blank inside cover (the edition's cover artwork is not a page), and
+// stepping onto it produced an empty frame labelled "Page 1 of N".
+function getPhotoPages() {
+  return activePages.filter((page) => page && page.image);
+}
+
 function getPhotoAt(index) {
-  if (!activePages.length) return null;
-  const safe = (index + activePages.length) % activePages.length;
-  return activePages[safe];
+  const pages = getPhotoPages();
+  if (!pages.length) return null;
+  const safe = (index + pages.length) % pages.length;
+  return pages[safe];
 }
 
 function renderPhotoLightbox() {
   const page = getPhotoAt(photoLightboxIndex);
   if (!page || !photoLightboxImage) return;
-  photoLightboxIndex = activePages.indexOf(page);
+  const pages = getPhotoPages();
+  photoLightboxIndex = pages.indexOf(page);
   photoLightboxImage.src = getResolvedImageSource(page.image);
   photoLightboxImage.alt = page.activityTitle || ('Page ' + page.pageNumber);
   if (photoLightboxCaption) {
@@ -352,8 +361,9 @@ function renderPhotoLightbox() {
 }
 
 function openPhotoLightbox(pageNumber) {
-  if (!photoLightbox || !activePages.length) return;
-  const idx = activePages.findIndex((p) => p.pageNumber === Number(pageNumber));
+  const pages = getPhotoPages();
+  if (!photoLightbox || !pages.length) return;
+  const idx = pages.findIndex((p) => p.pageNumber === Number(pageNumber));
   photoLightboxIndex = idx >= 0 ? idx : 0;
   photoLightboxLastFocus = document.activeElement;
   photoLightbox.hidden = false;
@@ -378,8 +388,9 @@ function closePhotoLightbox() {
 }
 
 function stepPhotoLightbox(delta) {
-  if (!photoLightboxOpen || !activePages.length) return;
-  photoLightboxIndex = (photoLightboxIndex + delta + activePages.length) % activePages.length;
+  const pages = getPhotoPages();
+  if (!photoLightboxOpen || !pages.length) return;
+  photoLightboxIndex = (photoLightboxIndex + delta + pages.length) % pages.length;
   renderPhotoLightbox();
 }
 
