@@ -934,12 +934,13 @@ nav a:hover,
     justify-content: center;
     overflow: hidden;
     position: relative;
-    perspective: 2600px;
-    perspective-origin: center center;
-    /* Open-book 3D: tilt the whole spread so it reads as a real book lying
-       at a slight angle instead of a flat rectangle. rotateY gives the
-       horizontal slant without inflating the book's vertical bounds. */
-    transform: perspective(1400px) rotateY(-5deg) rotateZ(-0.8deg);
+    perspective: 2200px;
+    perspective-origin: 50% 46%;
+    /* Open-book 3D: tilt the whole spread so it reads as a real book lying at
+       an angle instead of a flat rectangle. rotateX brings the bottom edge (and
+       its page stack) into view, rotateY gives the horizontal slant without
+       inflating the book's vertical bounds. */
+    transform: perspective(1250px) rotateX(3.5deg) rotateY(-8deg) rotateZ(-0.8deg);
     transform-origin: 50% 50%;
 }
 
