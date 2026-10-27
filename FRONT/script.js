@@ -227,6 +227,11 @@ let detailsExpanded = false;
 const bookOpening = document.getElementById('book-opening');
 const bookOpeningLabel = document.querySelector('[data-book-opening-label]');
 const bookOpeningStage = document.getElementById('book-opening-stage');
+
+// How long the tapped shelf card takes to fade out before the overlay opens.
+// Keep in lockstep with the .yearbook-book.is-opening animation in
+// scslaicares.css (selectedYearbookExit).
+const CARD_EXIT_MS = 560;
 // ===========================
 // Book-opening sequence (CSS/DOM)
 // ===========================
@@ -460,6 +465,10 @@ function isSinglePageMode() {
 
 function getFlipSize() {
   const visibleHeight = Math.floor(window.visualViewport?.height || window.innerHeight);
+  // The spread is drawn under the 3D tilt in .turnjs-reader, which magnifies the
+  // near edge. Shrinking the layout by this factor keeps the tilted book inside
+  // the stage.
+  const tiltFit = 0.94;
 
   if (isPhoneLayout()) {
     // Open two-page spread sized to the phone width. Facing portrait pages
@@ -473,19 +482,27 @@ function getFlipSize() {
       const measured = stage.clientWidth;
       if (measured > 200) availableWidth = measured;
     }
-    const width = Math.max(260, Math.min(720, Math.floor(availableWidth)));
+    const width = Math.max(260, Math.min(720, Math.floor(availableWidth * tiltFit)));
     const height = Math.max(200, Math.min(Math.floor(width * 0.82), Math.floor(visibleHeight * 0.52)));
     return { width, height };
   }
 
-  const maxWidth = Math.min(1100, Math.floor(window.innerWidth * 0.86));
-  const spreadWidth = Math.max(600, maxWidth);
+  // Fit the spread to the room the panel actually gives it, so the book fills
+  // the space beside it instead of sitting in a fixed-size box.
+  const maxWidth = 1500;
+  let availableWidth = Math.min(maxWidth, Math.floor(window.innerWidth * 0.92));
+  const measuredStage = document.querySelector('.reader-stage');
+  if (measuredStage && yearbookReader && !yearbookReader.hidden) {
+    const measured = measuredStage.clientWidth - 12;
+    if (measured > 300) availableWidth = Math.min(maxWidth, measured);
+  }
+  const spreadWidth = Math.max(600, Math.floor(availableWidth * tiltFit));
   // Cap by the truly visible height so short/landscape viewports still fit.
   const desiredHeight = Math.max(420, Math.floor(spreadWidth * 0.43));
   const heightCap = Math.max(300, visibleHeight - 160);
   return {
     width: spreadWidth,
-    height: Math.min(desiredHeight, heightCap)
+    height: Math.floor(Math.min(desiredHeight, heightCap) * tiltFit)
   };
 }
 
@@ -503,7 +520,7 @@ function applyDetailsState() {
 
 function setActiveDetails(pageNumber) {
   const page = activePages[Math.max(0, Math.min(activePages.length - 1, pageNumber - 1))];
-  if (!page) return;
+  if (!page || !Array.isArray(page.tags)) return;
 
   detailBindings.activityTitle.textContent = page.activityTitle;
   detailBindings.caption.textContent = page.caption;
@@ -532,7 +549,9 @@ function getPageAt(index) {
 }
 
 function pageMarkup(page) {
-  if (!page) {
+  // No artwork means a blank leaf: the inside front cover (page 1) and the
+  // filler pages that complete the last spread.
+  if (!page || !page.image) {
     return '<section class="album-page"><article class="print-layout blank-page"></article></section>';
   }
 
@@ -561,6 +580,7 @@ function buildBookShell() {
 
   flipbookElement.innerHTML = `
     <div class="book3d" data-book3d>
+      <div class="book-edge book-edge-tail" aria-hidden="true"></div>
       <div class="book-half left" data-static-left></div>
       <div class="book-half right" data-static-right></div>
       <div class="turn-sheet" data-turn-sheet hidden>
@@ -794,6 +814,15 @@ function setActiveYearbookCard(index) {
   });
 }
 
+// The reader's page list. The first gallery image of every edition is its cover
+// artwork: that belongs on the shelf and in the opening animation, not inside
+// the book. Page 1 is therefore the blank inside front cover, and the activity
+// photos keep their original numbering (they start at page 2).
+function buildReaderPages(edition) {
+  const [, ...photos] = edition.pages || [];
+  return [{ image: '', pageNumber: 1, activityTitle: '' }, ...photos];
+}
+
 async function openReader(index, startPage) {
   const edition = yearbookData[index];
   if (!edition || !yearbookReader) return;
@@ -820,7 +849,7 @@ async function openReader(index, startPage) {
     detailBindings.tags.textContent = edition.editionDetails.tags.join(', ');
   }
 
-  initTurnJs(edition.pages, startPage || 1);
+  initTurnJs(buildReaderPages(edition), startPage || 1);
   yearbookReader.hidden = false;
   yearbookReader.classList.add('is-visible');
   document.body.style.overflow = 'hidden';
@@ -868,7 +897,7 @@ async function openReaderAfterBookOpening(index, startPage) {
   const selectedBook = yearbookButtons[index];
   selectedBook?.classList.add('is-opening');
 
-  const cardTransitionDuration = hasReducedMotionPreference() ? 0 : 560;
+  const cardTransitionDuration = hasReducedMotionPreference() ? 0 : CARD_EXIT_MS;
   await new Promise((resolve) => window.setTimeout(resolve, cardTransitionDuration));
 
   if (sequence !== bookOpeningSequence) {

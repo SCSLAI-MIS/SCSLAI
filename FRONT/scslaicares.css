@@ -258,12 +258,15 @@ body, * {
     border-radius: 8px;
 }
 
-/* First stage: animate the selected library book before its modal opens. */
+/* First stage: the selected library book lifts a little and fades out before
+   its modal opens. Deliberately no horizontal travel - a fade reads calmer than
+   sliding the card off-screen. Duration must stay in lockstep with
+   CARD_EXIT_MS in script.js. */
 .yearbook-book.is-opening {
     position: relative;
     z-index: 4;
     pointer-events: none;
-    animation: selectedYearbookExit 560ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+    animation: selectedYearbookExit 560ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 .yearbook-book.is-opening .yearbook-cover {
@@ -273,15 +276,15 @@ body, * {
 @keyframes selectedYearbookExit {
     0% {
         opacity: 1;
-        transform: translateX(0) scale(1);
+        transform: translateY(0) scale(1);
     }
-    42% {
-        opacity: 1;
-        transform: translateX(-5vw) scale(1.04);
+    38% {
+        opacity: 0.9;
+        transform: translateY(-4px) scale(1.02);
     }
     100% {
         opacity: 0;
-        transform: translateX(-115vw) scale(0.96);
+        transform: translateY(-8px) scale(1.01);
     }
 }
 
