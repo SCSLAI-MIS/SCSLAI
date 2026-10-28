@@ -67,7 +67,7 @@ window.SCSLAI_FACEBOOK_LIVE = {
     /* ---------------------------------------------------------------------
        1) VIDEO LINK  ←←← PASTE YOUR LINK HERE (YouTube or Facebook)
        --------------------------------------------------------------------- */
-    liveUrl: 'https://www.facebook.com/61555295043241/videos/1617556620107041/',
+    liveUrl: 'https://youtu.be/3qFyy0gedaM',
 
     /* ---------------------------------------------------------------------
        2) SHOW FROM  (start date & time)

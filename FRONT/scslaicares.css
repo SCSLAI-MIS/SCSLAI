@@ -1,5 +1,5 @@
 /* SCSLAI Cares page stylesheet */
-@import url("style.css?v=20260903h");
+@import url("style.css?v=20261027a");
 
 /* Override Bootstrap's font stack and heading sizes to match the home page */
 body, * {
@@ -24,77 +24,226 @@ body, * {
     font-family: "Cormorant Garamond", Georgia, serif !important;
 }
 
-/* Closed-book treatment for the SCSLAI Cares yearbook editions. */
+/* Closed-book treatment for the SCSLAI Cares yearbook editions.
+   Each library book is dressed as a hardbound yearbook instead of a flat
+   poster: portrait proportions, a hinged cloth spine down the left, the paper
+   block peeking out along the right and bottom edges, and gold-foil cover
+   lettering around the framed activity plate. */
 .yearbook-grid {
-    gap: 2.4rem 1.5rem;
+    gap: 3rem 1.5rem;
 }
 
 .yearbook-book {
     padding: 0.8rem 0.5rem 1rem;
-    perspective: 1100px;
+    perspective: 1500px;
 }
 
 .yearbook-cover {
-    --cover-tilt: perspective(920px) rotateX(26deg) rotateZ(-7deg);
+    --cover-width: 240px;
+    --spine-width: 15px;
+    --cover-cloth-1: #1e3050;
+    --cover-cloth-2: #0a1322;
+    --cover-tilt: perspective(1500px) rotateX(8deg) rotateY(-18deg) rotateZ(-1deg);
     position: relative;
-    display: block;
-    width: min(100%, 250px);
-    aspect-ratio: 1.48 / 1;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    width: min(100%, var(--cover-width));
+    aspect-ratio: 3 / 4;
     max-width: none;
-    margin: 0 auto 1.8rem;
+    margin: 0 auto 1.6rem;
+    padding: 15px 13px 13px calc(var(--spine-width) + 12px);
     overflow: visible;
     isolation: isolate;
-    border-radius: 10px 13px 9px 11px;
-    background: #faf8f2;
+    border-radius: 3px 9px 9px 4px;
+    background:
+        /* gold foil hinge line running down the spine */
+        linear-gradient(90deg, rgba(0, 0, 0, 0) 0 12px, rgba(226, 190, 120, 0.7) 12px 13px, rgba(0, 0, 0, 0) 13px),
+        /* spine shading: dark cloth, highlight, then the flat front board */
+        linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0, rgba(0, 0, 0, 0.28) 6px, rgba(255, 255, 255, 0.16) 11px, rgba(0, 0, 0, 0.22) 14px, rgba(0, 0, 0, 0.05) 15px, rgba(0, 0, 0, 0) 17px),
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.035) 0 2px, rgba(0, 0, 0, 0.035) 2px 4px),
+        linear-gradient(150deg, var(--cover-cloth-1) 0%, var(--cover-cloth-2) 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+        inset 0 0 26px rgba(0, 0, 0, 0.45),
+        0 18px 30px rgba(6, 4, 2, 0.42);
     transform: var(--cover-tilt);
     transform-origin: center center;
     transform-style: preserve-3d;
     transition: transform 240ms ease, filter 240ms ease;
-    
 }
 
-/* The layered paper block beneath the cover. */
+/* The paper block. Only the strips that stick out past the boards are painted,
+   so the cloth cover stays clean underneath. */
 .yearbook-cover::before {
     content: "";
     position: absolute;
     z-index: -1;
-    inset: 9px -7px -22px 9px;
-    border: 1px solid #aaa28f;
-    border-radius: 4px 7px 10px 9px;
-    background:
-        repeating-linear-gradient(
-            to bottom,
-            rgba(116, 106, 88, 0.24) 0,
-            rgba(116, 106, 88, 0.24) 1px,
-            rgba(255, 253, 244, 0.98) 1px,
-            rgba(255, 253, 244, 0.98) 3px
-        ),
-        #f8f4e8;
-    box-shadow: 8px 12px 15px rgba(8, 5, 2, 0.33);
+    top: 6px;
+    right: -10px;
+    bottom: -10px;
+    left: 8px;
+    border-radius: 3px 7px 8px 6px;
+    background-color: transparent;
+    background-image:
+        repeating-linear-gradient(90deg, rgba(122, 108, 86, 0.45) 0 1px, rgba(255, 253, 246, 0.98) 1px 2.5px),
+        repeating-linear-gradient(180deg, rgba(122, 108, 86, 0.38) 0 1px, rgba(255, 253, 246, 0.98) 1px 2.5px);
+    background-position: right center, center bottom;
+    background-repeat: no-repeat, no-repeat;
+    background-size: 10px 100%, 100% 10px;
+    box-shadow: 7px 9px 16px rgba(8, 5, 2, 0.34);
 }
 
-/* A lower hard-cover lip makes the page block read as a bound book. */
+/* A slim board lip beyond the pages finishes the bound-book silhouette. */
 .yearbook-cover::after {
     content: "";
     position: absolute;
     z-index: -2;
-    inset: 16px -10px -28px 12px;
-    border-radius: 5px 8px 12px 10px;
-    background: linear-gradient(145deg, #fffef9, #d9d1c1);
-    box-shadow: 9px 16px 18px rgba(8, 5, 2, 0.25);
+    top: 11px;
+    right: -14px;
+    bottom: -14px;
+    left: 13px;
+    border-radius: 4px 9px 10px 7px;
+    background-color: transparent;
+    background-image:
+        linear-gradient(180deg, rgba(255, 253, 246, 0.96), rgba(206, 194, 171, 0.96)),
+        linear-gradient(90deg, rgba(255, 253, 246, 0.96), rgba(206, 194, 171, 0.96));
+    background-position: right center, center bottom;
+    background-repeat: no-repeat, no-repeat;
+    background-size: 4px 100%, 100% 4px;
+    box-shadow: 10px 13px 20px rgba(8, 5, 2, 0.26);
 }
 
-.yearbook-cover img {
+/* Front-board lettering: imprint, wordmark and the edition year in gold foil. */
+.cover-head {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-align: center;
+}
+
+.cover-kicker {
+    padding-bottom: 3px;
+    border-bottom: 1px solid rgba(244, 223, 174, 0.4);
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(244, 223, 174, 0.88);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.cover-wordmark {
+    font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #fdf1d5;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.cover-year {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 2.3rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: #f6dda6;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55), 0 0 14px rgba(246, 221, 166, 0.3);
+}
+
+/* Two-year editions need a tighter numeral so the range still fits the board. */
+.cover-year-range {
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+}
+
+/* The activity artwork is tipped in like a cover photo on a mat. */
+.cover-plate {
     position: relative;
-    z-index: 1;
+    display: block;
+    flex: 0 0 auto;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    border-radius: 2px;
+    background: #fffdf7;
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.38),
+        0 0 0 4px rgba(255, 252, 242, 0.94),
+        0 0 0 5px rgba(0, 0, 0, 0.32),
+        0 8px 14px rgba(0, 0, 0, 0.4);
+}
+
+.cover-plate img {
+    display: block;
     width: 100%;
     height: 100%;
+    border: 0;
+    border-radius: 0;
     object-fit: cover;
-    border: 5px solid #fffdf7;
-    border-radius: inherit;
-    box-shadow:
-        inset 4px 0 0 rgba(87, 66, 39, 0.16),
-        0 5px 7px rgba(15, 8, 2, 0.28);
+    box-shadow: none;
+}
+
+/* Edition motto along the bottom of the front board. */
+.cover-foot {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.cover-motto {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 0.74rem;
+    font-style: italic;
+    letter-spacing: 0.05em;
+    line-height: 1.4;
+    color: rgba(247, 231, 199, 0.92);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Cloth colours keep the three editions distinguishable on the shelf. */
+.yearbook-book[data-yearbook-index="0"] .yearbook-cover {
+    --cover-cloth-1: #1e3050;
+    --cover-cloth-2: #0a1322;
+}
+
+.yearbook-book[data-yearbook-index="1"] .yearbook-cover {
+    --cover-cloth-1: #25492f;
+    --cover-cloth-2: #0f2116;
+}
+
+.yearbook-book[data-yearbook-index="2"] .yearbook-cover {
+    --cover-cloth-1: #59242e;
+    --cover-cloth-2: #290f15;
+}
+
+/* Shelf label under each book. */
+.yearbook-book .book-title::before {
+    content: "";
+    display: block;
+    width: 46px;
+    height: 1px;
+    margin: 0 auto 0.5rem;
+    background: linear-gradient(90deg, rgba(248, 232, 201, 0), rgba(248, 232, 201, 0.8), rgba(248, 232, 201, 0));
+}
+
+@media (max-width: 560px) {
+    .yearbook-cover {
+        --cover-width: 208px;
+    }
+
+    .cover-year {
+        font-size: 2rem;
+    }
+
+    .cover-year-range {
+        font-size: 1.3rem;
+    }
 }
 
 .yearbook-book:hover .yearbook-cover,
@@ -109,12 +258,15 @@ body, * {
     border-radius: 8px;
 }
 
-/* First stage: animate the selected library book before its modal opens. */
+/* First stage: the selected library book lifts a little and fades out before
+   its modal opens. Deliberately no horizontal travel - a fade reads calmer than
+   sliding the card off-screen. Duration must stay in lockstep with
+   CARD_EXIT_MS in script.js. */
 .yearbook-book.is-opening {
     position: relative;
     z-index: 4;
     pointer-events: none;
-    animation: selectedYearbookExit 560ms cubic-bezier(0.22, 0.8, 0.3, 1) both;
+    animation: selectedYearbookExit 560ms cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 .yearbook-book.is-opening .yearbook-cover {
@@ -124,15 +276,15 @@ body, * {
 @keyframes selectedYearbookExit {
     0% {
         opacity: 1;
-        transform: translateX(0) scale(1);
+        transform: translateY(0) scale(1);
     }
-    42% {
-        opacity: 1;
-        transform: translateX(-5vw) scale(1.04);
+    38% {
+        opacity: 0.9;
+        transform: translateY(-4px) scale(1.02);
     }
     100% {
         opacity: 0;
-        transform: translateX(-115vw) scale(0.96);
+        transform: translateY(-8px) scale(1.01);
     }
 }
 
@@ -160,13 +312,24 @@ body, * {
     display: none !important;
 }
 
+/* The panel is a column: the book stage takes the space, the caption gets its
+   own row underneath, so the two can never overlap at any screen size. */
+.book-opening-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+}
+
 .book-opening-label {
-    position: absolute;
+    order: 2;
+    flex: 0 0 auto;
     z-index: 2;
-    right: 1rem;
-    bottom: 0.9rem;
-    left: 1rem;
     margin: 0;
+    padding: 0 1rem 0.9rem;
     color: rgba(255, 255, 255, 0.92);
     font-size: 0.82rem;
     font-weight: 700;
@@ -176,102 +339,22 @@ body, * {
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
 }
 
-.book-opening-panel {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: transparent;
-}
-
-/* The opening sequence is the green-screen book-opening video. A canvas next
-   to the <video> receives every frame with the green screen keyed out to real
-   transparency (alpha = 0), so the page behind the overlay stays visible.
-   The raw <video> itself stays hidden: it is only the decode source, plus a
-   fallback renderer for browsers where per-pixel access is unavailable. */
-.book-opening-video {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background: transparent;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-
-/* Fallback: chroma keying unavailable - show the raw video unmodified. */
-.book-opening.is-fallback .book-opening-video {
-    opacity: 1;
-    visibility: visible;
-}
-
-.book-opening-canvas {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background: transparent;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
-
-/* While keying, only the processed canvas is presented. */
-.book-opening.is-chroma .book-opening-canvas {
-    opacity: 1;
-    visibility: visible;
-    animation: bookOpeningPrelude 0.45s cubic-bezier(0.22, 0.8, 0.3, 1) both;
-}
-
-.book-opening.is-fallback .book-opening-canvas {
-    display: none;
-}
-
-@keyframes bookOpeningPrelude {
-    from {
-        opacity: 0;
-        transform: scale(0.96);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
+/* The opening sequence is a CSS/DOM animation (animation/book-animation.js):
+   the book the visitor clicked is rebuilt as real 3D layers and swings open
+   over the page, so no video or canvas keying is involved any more. That module
+   injects its own .book-opening-stage / .book-scene styles (the stage is the
+   flex row above the caption); this overlay only provides the transparent
+   full-screen panel and the caption. */
 
 @media (max-width: 480px) {
     .book-opening-label {
         font-size: 0.72rem;
-        bottom: 0.7rem;
-    }
-}
-
-/* Mobile: the book-opening clip is 1920x1080 with a black pillarbox border
-   around the green screen, and the book (~1540px wide, centered) is what
-   should fill the screen. A plain "contain" leaves the book tiny; a full
-   "cover" crops it. So we size the video/canvas to a 16:9 box 1.2x the
-   screen width (centered, clipped by the panel): that crops off the black
-   pillarbox and the empty green margins so the book fills ~96% of the width
-   without being cut off. Aspect ratio and animation are untouched. Tune the
-   120vw multiplier to taste (higher = more zoom / tighter crop). */
-@media (max-width: 768px) {
-    .book-opening-video,
-    .book-opening-canvas {
-        width: 120vw;
-        height: 67.5vw;
-        margin: auto;
+        padding-bottom: 0.7rem;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .yearbook-book.is-opening .yearbook-cover,
-    .book-opening.is-chroma .book-opening-canvas {
+    .yearbook-book.is-opening .yearbook-cover {
         animation: none;
     }
 }
