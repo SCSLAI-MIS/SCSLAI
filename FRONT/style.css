@@ -819,7 +819,7 @@ nav a:hover,
 .reader-panel {
     position: relative;
     z-index: 2;
-    width: min(100%, 1100px);
+    width: min(100%, 1500px);
     max-height: calc(100vh - 2rem);
     overflow: auto;
     border-radius: 20px;
@@ -882,7 +882,11 @@ nav a:hover,
     place-items: center;
     margin-top: 0.35rem;
     position: relative;
-    padding: 10px 6px;
+    /* Clips the page turn at a boundary bigger than the book but smaller than
+       the toolbar: mid-turn the sheet projects ~50px past the book's box, so
+       this padding lets it show in full while keeping it off the UI above. */
+    overflow: hidden;
+    padding: 60px 6px;
 }
 
 .reader-pagination {
@@ -929,17 +933,27 @@ nav a:hover,
 }
 
 .turnjs-reader {
-    width: min(100%, 1000px);
+    /* Fills the reader panel: the book inside should use the space beside it,
+       not sit in a fixed 1000px box. Overflow must stay visible: the turning
+       sheet swings toward the reader and projects well past the book's box, and
+       clipping it here sliced the turning page. */
+    width: 100%;
     display: flex;
     justify-content: center;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
-    perspective: 2600px;
-    perspective-origin: center center;
-    /* Open-book 3D: tilt the whole spread so it reads as a real book lying
-       at a slight angle instead of a flat rectangle. rotateY gives the
-       horizontal slant without inflating the book's vertical bounds. */
-    transform: perspective(1400px) rotateY(-5deg) rotateZ(-0.8deg);
+    /* Perspective for the children - i.e. how far the turning sheet swings out
+       of the page plane toward the reader. Kept long (4.2x the book's width) so
+       the sheet grows ~1.2x at most: a short perspective made a half-page edge
+       project to 1.7x the book's height, which either got sliced or rode over
+       the toolbar. The book's own tilt is a separate, static transform below. */
+    perspective: 4200px;
+    perspective-origin: 50% 50%;
+    /* The book lies open on a surface, seen from slightly above: rotateX tips
+       the far edge away so the tail of the paper block shows. Deliberately no
+       rotateY/rotateZ - a sideways turn magnifies the near half and swings one
+       fore-edge into view, which is what made the spread look lopsided. */
+    transform: perspective(1200px) rotateX(10deg);
     transform-origin: 50% 50%;
 }
 
@@ -953,7 +967,11 @@ nav a:hover,
     transform-style: preserve-3d;
     will-change: transform;
     position: relative;
-    overflow: hidden;
+    /* Must stay visible: mid-turn the sheet swings out of the page plane toward
+       the reader, so its projection grows to ~800px tall against a 500px book.
+       Clipping here sliced the turning page top and bottom. The pages clip their
+       own content, so nothing else needs this box to hide. */
+    overflow: visible;
 }
 
 #flipbook .book3d {
@@ -988,6 +1006,38 @@ nav a:hover,
 #flipbook .book-half.right {
     right: 0;
     border-left: 0;
+}
+
+/* Page-stack edges. A bound volume shows the layered fore-edges of its paper
+   block along the outside of both halves; without them the open spread reads as
+   two flat cards. z-index lifts them above the page's own edge shading. */
+#flipbook .book-half.left::before,
+#flipbook .book-half.right::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    z-index: 3;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(58, 42, 24, 0.34), rgba(0, 0, 0, 0) 100%),
+        repeating-linear-gradient(90deg, rgba(120, 96, 64, 0.5) 0 1px, rgba(255, 252, 242, 0.96) 1px 2.2px);
+    box-shadow:
+        inset 0 0 8px rgba(90, 62, 30, 0.34),
+        inset -1px 0 0 rgba(255, 255, 255, 0.28);
+}
+
+#flipbook .book-half.left::before {
+    left: 0;
+}
+
+#flipbook .book-half.right::after {
+    right: 0;
+    /* Mirrored highlight: the outer edge of the right half faces the light. */
+    box-shadow:
+        inset 0 0 6px rgba(90, 62, 30, 0.3),
+        inset 1px 0 0 rgba(255, 255, 255, 0.28);
 }
 
 #flipbook .turn-sheet {
@@ -1111,21 +1161,58 @@ nav a:hover,
         radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 42%),
         repeating-linear-gradient(0deg, rgba(134, 90, 43, 0.05) 0 1px, transparent 1px 4px),
         #efd7af;
-    border: 1px solid rgba(73, 57, 39, 0.26);
+    /* The boards overhang the paper block, exactly like the shelf cover: a
+       visible rim around the pages, then the board's own thickness below. */
+    border: 5px solid rgba(52, 36, 22, 0.6);
+    border-radius: 14px;
     box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-        /* Stacked page edges: layered offsets below the book mimic the
-           thickness of a real bound volume. */
-        0 1px 0 #d9c49a,
-        0 2px 0 #ccb68a,
-        0 3px 0 #bda77d,
-        0 5px 0 #ab9569,
-        0 8px 0 #97805a,
-        0 12px 22px rgba(44, 29, 17, 0.32);
-    border-radius: 10px;
+        inset 0 0 26px rgba(52, 32, 12, 0.36),
+        0 6px 0 #b9a179,
+        0 11px 0 #8d7550,
+        0 26px 40px rgba(24, 14, 6, 0.46);
     backface-visibility: hidden;
     transform: translateZ(0);
     will-change: transform;
+}
+
+/* Bottom edge of the same paper block, showing under the boards. */
+#flipbook .book3d::after {
+    content: "";
+    position: absolute;
+    left: 11px;
+    right: 11px;
+    bottom: 0;
+    height: 10px;
+    z-index: 3;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, rgba(58, 42, 24, 0.32), rgba(0, 0, 0, 0) 100%),
+        repeating-linear-gradient(180deg, rgba(120, 96, 64, 0.46) 0 1px, rgba(255, 252, 242, 0.96) 1px 2.2px);
+    box-shadow: inset 0 0 8px rgba(90, 62, 30, 0.32);
+}
+
+/* Real thickness, as a 3D plane hanging off the paper block: the tail under the
+   book. With the spread tilted (see .turnjs-reader) it catches the light as a
+   solid volume. A browser that flattens the 3D subtree simply drops it, and the
+   painted strips above stay as the flat fallback. Only the tail is built: with
+   no sideways turn the fore-edges are parallel to the view, so a plane there
+   would be edge-on (and on one side only, which reads as lopsided). */
+#flipbook .book-edge {
+    position: absolute;
+    pointer-events: none;
+    background-color: #efe7d5;
+    box-shadow: inset 0 0 14px rgba(90, 62, 30, 0.42);
+}
+
+#flipbook .book-edge-tail {
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 34px;
+    transform-origin: center top;
+    transform: rotateX(-90deg);
+    background: repeating-linear-gradient(180deg, rgba(120, 96, 64, 0.5) 0 1px, rgba(255, 252, 242, 0.96) 1px 2.2px);
 }
 
 /* Bound-spine crease down the centre of the open book. */
@@ -1135,13 +1222,13 @@ nav a:hover,
     top: 0;
     bottom: 0;
     left: 50%;
-    width: 26px;
+    width: 34px;
     transform: translateX(-50%);
     background: linear-gradient(to right,
         rgba(64, 42, 22, 0) 0%,
-        rgba(64, 42, 22, 0.14) 42%,
-        rgba(64, 42, 22, 0.26) 50%,
-        rgba(64, 42, 22, 0.14) 58%,
+        rgba(64, 42, 22, 0.2) 38%,
+        rgba(64, 42, 22, 0.4) 50%,
+        rgba(64, 42, 22, 0.2) 62%,
         rgba(64, 42, 22, 0) 100%);
     pointer-events: none;
     z-index: 60;
@@ -1200,6 +1287,22 @@ nav a:hover,
     width: 3px;
     background: linear-gradient(to bottom, rgba(132, 84, 34, 0.56), rgba(98, 58, 20, 0.5));
     pointer-events: none;
+}
+
+/* The gutter shadow belongs at the spine. The left page's spine edge is its
+   RIGHT edge, so both of its page-edge treatments mirror: the shadow moves to
+   the right (the fold) and the thin edge line to the left (the fore-edge). That
+   makes the fold read as a valley with a fore-edge on the outside of each half,
+   instead of both shadows sitting on the same side. */
+#flipbook .album-page-left::before {
+    left: auto;
+    right: 0;
+    background: linear-gradient(to left, rgba(68, 39, 11, 0.48), rgba(68, 39, 11, 0));
+}
+
+#flipbook .album-page-left::after {
+    right: auto;
+    left: 0;
 }
 
 #flipbook .scrap-card {

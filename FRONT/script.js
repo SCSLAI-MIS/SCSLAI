@@ -226,332 +226,77 @@ const readerPanel = document.querySelector('.reader-panel');
 let detailsExpanded = false;
 const bookOpening = document.getElementById('book-opening');
 const bookOpeningLabel = document.querySelector('[data-book-opening-label]');
-const bookOpeningVideo = document.getElementById('book-opening-video');
+const bookOpeningStage = document.getElementById('book-opening-stage');
+
+// How long the tapped shelf card takes to fade out before the overlay opens.
+// Keep in lockstep with the .yearbook-book.is-opening animation in
+// scslaicares.css (selectedYearbookExit).
+const CARD_EXIT_MS = 560;
 // ===========================
-// Green-screen chroma key for the book-opening animation
+// Book-opening sequence (CSS/DOM)
 // ===========================
 //
-// The book-opening video ("animation/Book.mp4") is recorded against
-// a green screen. A plain <video> element cannot display transparency, so each
-// frame is copied onto a single reused canvas and the green background is keyed
-// out in real time (alpha = 0) before the frame is presented. The exact shade
-// of green is sampled from the video itself instead of assuming pure #00FF00,
-// a hue tolerance plus a soft feather band keeps the edges free of hard halos,
-// and green spill is suppressed along those softened edges. Neutral (paper,
-// white) and near-black pixels are always kept so the book itself stays solid.
+// The opening used to be a green-screen clip ("animation/Book.mp4") that was
+// chroma-keyed frame by frame onto a canvas. It is now a CSS/DOM animation
+// (animation/book-animation.js) that renders the very same book the visitor
+// clicked: the front board reuses the .yearbook-cover / .cover-* rules from
+// scslaicares.css, and the cloth colours are read straight off the shelf card.
 
-const CHROMA_KEY_CONFIG = {
-  hueTolerance: 20,          // degrees around the sampled hue that are fully removed
-  hueFeather: 24,            // soft falloff band that prevents harsh halos
-  despillRange: 30,          // extra band where green spill is neutralized on kept pixels
-  saturationFloor: 0.18,     // low-saturation (neutral) pixels are always kept
-  valueFloor: 0.10,          // near-black pixels are always kept
-  sampleHueRange: [70, 170], // hues counted as "green-ish" while sampling
-  minSamplePixels: 200,      // green samples required before the sample is trusted
-  fallbackKeyHue: 120        // used until (and unless) the video itself is sampled
-};
+let bookOpeningAnimation = null;
 
-function hueDistanceTo(hue, keyHue) {
-  const diff = Math.abs(hue - keyHue) % 360;
-  return diff > 180 ? 360 - diff : diff;
-}
+function getBookOpeningAnimation() {
+  if (!bookOpeningStage || !window.BookAnimation) return null;
 
-function computeHue(r, g, b, max, delta) {
-  if (delta === 0) return 0;
-  let hue;
-  if (max === r) hue = 60 * (((g - b) / delta) % 6);
-  else if (max === g) hue = 60 * ((b - r) / delta + 2);
-  else hue = 60 * ((r - g) / delta + 4);
-  return hue < 0 ? hue + 360 : hue;
-}
-
-function createBookOpeningChromaKey(video) {
-  if (!video) {
-    return { start() {}, stop() {} };
+  if (!bookOpeningAnimation) {
+    bookOpeningAnimation = window.BookAnimation.mount(bookOpeningStage);
   }
+  return bookOpeningAnimation;
+}
 
-  const supportsVideoFrameCallback = typeof video.requestVideoFrameCallback === 'function';
-  const state = {
-    canvas: null,
-    ctx: null,
-    overlay: null,
-    active: false,
-    usingFallback: false,
-    frameHandle: 0,
-    rafId: 0,
-    keyHue: CHROMA_KEY_CONFIG.fallbackKeyHue,
-    hasSampledKey: false,
-    lastVideoTime: -1,
-    resizeHandler: null
+// Skin for the animated book, mirrored from the shelf card it was opened from.
+function getBookOpeningSkin(index) {
+  const edition = yearbookData[index];
+  if (!edition) return null;
+
+  const shelfCover = yearbookButtons[index]?.querySelector('.yearbook-cover');
+  const shelfStyles = shelfCover ? window.getComputedStyle(shelfCover) : null;
+  const cloth = shelfStyles
+    ? [
+        shelfStyles.getPropertyValue('--cover-cloth-1').trim(),
+        shelfStyles.getPropertyValue('--cover-cloth-2').trim()
+      ]
+    : null;
+
+  const sources = (edition.pages || []).map((page) => page.image).filter(Boolean);
+
+  return {
+    // "2022-2023 Edition" -> "2022–2023", the en dash the covers use.
+    year: String(edition.title || '').replace(/\s*Edition\s*$/i, '').replace('-', '\u2013'),
+    motto: edition.badge || '',
+    coverImage: sources[0] || '',
+    pageImages: sources.slice(1, 5),
+    cloth
   };
-
-  function ensureCanvas() {
-    if (state.canvas) return true;
-    const panel = video.parentElement;
-    if (!panel) return false;
-
-    // One canvas for the whole session; reused on every opening.
-    const canvas = document.createElement('canvas');
-    canvas.className = 'book-opening-canvas';
-    canvas.setAttribute('aria-hidden', 'true');
-    panel.appendChild(canvas);
-
-    state.canvas = canvas;
-    state.ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: true });
-    return Boolean(state.ctx);
-  }
-
-  function syncCanvasSize() {
-    if (!state.canvas) return;
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    if (!width || !height) return;
-    // Backing store matches the video's intrinsic size, so the aspect ratio is
-    // preserved exactly; CSS (object-fit: contain) handles responsive display.
-    if (state.canvas.width !== width || state.canvas.height !== height) {
-      state.canvas.width = width;
-      state.canvas.height = height;
-    }
-  }
-
-  function readFramePixels() {
-    try {
-      return state.ctx.getImageData(0, 0, state.canvas.width, state.canvas.height);
-    } catch (error) {
-      // Pixel access failed (e.g. tainted canvas) - fall back to the raw video.
-      return null;
-    }
-  }
-
-function sampleKeyColorFromEdges(imageData) {
-    const { data } = imageData;
-    const width = state.canvas.width;
-    const height = state.canvas.height;
-    const [hueMin, hueMax] = CHROMA_KEY_CONFIG.sampleHueRange;
-    const band = Math.max(2, Math.floor(Math.min(width, height) * 0.1));
-    const step = Math.max(2, Math.floor(Math.min(width, height) / 40));
-
-    let sumCos = 0;
-    let sumSin = 0;
-    let samples = 0;
-
-    const consider = (x, y) => {
-      const index = (y * width + x) * 4;
-      if (data[index + 3] === 0) return;
-      const r = data[index] / 255;
-      const g = data[index + 1] / 255;
-      const b = data[index + 2] / 255;
-
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const delta = max - min;
-      if (max === 0 || max < 0.06 || delta / max < 0.15) return;
-
-      const hue = computeHue(r, g, b, max, delta);
-      if (hue < hueMin || hue > hueMax) return;
-
-      // Circular mean so a hue near 0/360 cannot skew the average.
-      const radians = (hue * Math.PI) / 180;
-      sumCos += Math.cos(radians);
-      sumSin += Math.sin(radians);
-      samples += 1;
-    };
-
-    for (let x = 0; x < width; x += step) {
-      for (let y = 0; y < band; y += step) {
-        consider(x, y);
-        consider(x, height - 1 - y);
-      }
-    }
-    for (let y = 0; y < height; y += step) {
-      for (let x = 0; x < band; x += step) {
-        consider(x, y);
-        consider(width - 1 - x, y);
-      }
-    }
-
-    if (samples < CHROMA_KEY_CONFIG.minSamplePixels) return false;
-
-    const meanHue = (Math.atan2(sumSin, sumCos) * 180) / Math.PI;
-    state.keyHue = meanHue < 0 ? meanHue + 360 : meanHue;
-    return true;
-  }
-
-  function keyOutGreenPixels(imageData) {
-    const data = imageData.data;
-    const { hueTolerance, hueFeather, despillRange, saturationFloor, valueFloor } = CHROMA_KEY_CONFIG;
-    const innerBound = hueTolerance;
-    const outerBound = hueTolerance + hueFeather;
-    const despillBound = outerBound + despillRange;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i] / 255;
-      const g = data[i + 1] / 255;
-      const b = data[i + 2] / 255;
-
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const delta = max - min;
-      const saturation = max === 0 ? 0 : delta / max;
-
-      // Keep neutral tones (paper, white pages) and near-black detail opaque.
-      if (saturation < saturationFloor || max < valueFloor) continue;
-
-      const hue = computeHue(r, g, b, max, delta);
-      const distance = hueDistanceTo(hue, state.keyHue);
-
-      if (distance <= innerBound) {
-        // Solid background: fully transparent (alpha = 0), never recolored.
-        data[i + 3] = 0;
-        continue;
-      }
-      if (distance >= outerBound) {
-        // Just outside the feather: foreground blends that still carry a green
-        // cast (e.g. hair mixed with the screen). Neutralize the spill so no
-        // green halo remains, but keep the pixel itself fully visible.
-        if (distance < despillBound && g > r && g > b) {
-          data[i + 1] = Math.round(Math.max(r, b) * 255);
-        }
-        continue;
-      }
-
-      // Feathered edge: soften the mix and pull the green spill back so the
-      // boundary does not glow green against the page behind it.
-      const alpha = Math.round(((distance - innerBound) / hueFeather) * 255);
-      if (alpha <= 0) {
-        data[i + 3] = 0;
-        continue;
-      }
-      if (g > r && g > b) {
-        data[i + 1] = Math.round(Math.max(r, b) * 255);
-      }
-      data[i + 3] = alpha;
-    }
-  }
-
-  function detachFrameLoop() {
-    if (state.rafId) {
-      window.cancelAnimationFrame(state.rafId);
-      state.rafId = 0;
-    }
-    if (state.frameHandle && supportsVideoFrameCallback) {
-      video.cancelVideoFrameCallback?.(state.frameHandle);
-      state.frameHandle = 0;
-    }
-    if (state.resizeHandler) {
-      video.removeEventListener('resize', state.resizeHandler);
-      state.resizeHandler = null;
-    }
-  }
-
-  function disableChromaProcessing() {
-    state.usingFallback = true;
-    state.active = false;
-    detachFrameLoop();
-    // Real-time keying is unavailable; the plain video element takes over so
-    // the opening animation still plays.
-    state.overlay?.classList.remove('is-chroma');
-    state.overlay?.classList.add('is-fallback');
-  }
-
-  function processFrame() {
-    if (!state.active || state.usingFallback) return;
-    syncCanvasSize();
-    if (!state.ctx || !state.canvas.width || !state.canvas.height) return;
-
-    try {
-      state.ctx.drawImage(video, 0, 0, state.canvas.width, state.canvas.height);
-    } catch (error) {
-      disableChromaProcessing();
-      return;
-    }
-
-    const imageData = readFramePixels();
-    if (!imageData) {
-      disableChromaProcessing();
-      return;
-    }
-
-    if (!state.hasSampledKey) {
-      // Learn the actual green shade from this first frame before keying it.
-      sampleKeyColorFromEdges(imageData);
-      state.hasSampledKey = true;
-    }
-
-    keyOutGreenPixels(imageData);
-
-    try {
-      state.ctx.putImageData(imageData, 0, 0);
-    } catch (error) {
-      disableChromaProcessing();
-    }
-  }
-
-  function scheduleNextFrame() {
-    if (!state.active || state.usingFallback) return;
-    if (supportsVideoFrameCallback) {
-      state.frameHandle = video.requestVideoFrameCallback(() => {
-        if (!state.active || state.usingFallback) return;
-        processFrame();
-        scheduleNextFrame();
-      });
-      return;
-    }
-    state.rafId = window.requestAnimationFrame(() => {
-      if (!state.active || state.usingFallback) return;
-      const currentTime = video.currentTime;
-      if (currentTime !== state.lastVideoTime) {
-        state.lastVideoTime = currentTime;
-        processFrame();
-      }
-      scheduleNextFrame();
-    });
-  }
-
-  function start() {
-    if (state.active) return;
-    state.overlay = video.closest('.book-opening');
-
-    if (state.usingFallback) {
-      state.overlay?.classList.remove('is-chroma');
-      state.overlay?.classList.add('is-fallback');
-      return;
-    }
-    if (!ensureCanvas()) {
-      disableChromaProcessing();
-      return;
-    }
-
-    state.active = true;
-    state.hasSampledKey = false;
-    state.lastVideoTime = -1;
-    syncCanvasSize();
-
-    state.overlay?.classList.remove('is-fallback');
-    state.overlay?.classList.add('is-chroma');
-
-    state.resizeHandler = state.resizeHandler || (() => syncCanvasSize());
-    if (state.resizeHandler) {
-      video.removeEventListener('resize', state.resizeHandler);
-    }
-    video.addEventListener('resize', state.resizeHandler);
-    scheduleNextFrame();
-  }
-
-  function stop() {
-    state.active = false;
-    detachFrameLoop();
-    state.overlay?.classList.remove('is-chroma');
-    state.overlay?.classList.remove('is-fallback');
-    if (state.ctx && state.canvas) {
-      state.ctx.clearRect(0, 0, state.canvas.width, state.canvas.height);
-    }
-  }
-
-  return { start, stop };
 }
 
-const bookOpeningChromaKey = createBookOpeningChromaKey(bookOpeningVideo);
+// Resolves once the book has finished opening (skipped for reduced motion).
+function runBookOpeningSequence(index) {
+  if (hasReducedMotionPreference()) return Promise.resolve();
+
+  const animation = getBookOpeningAnimation();
+  const skin = getBookOpeningSkin(index);
+  if (!animation || !skin) return Promise.resolve();
+
+  return animation.play(skin);
+}
+
+// Paint the closed book for this edition before the overlay is revealed, so the
+// first visible frame is already the book the visitor clicked.
+function prepareBookOpening(index) {
+  const animation = getBookOpeningAnimation();
+  const skin = getBookOpeningSkin(index);
+  if (animation && skin) animation.prepare(skin);
+}
 
 const detailBindings = {
   activityTitle: document.querySelector('[data-activity-title]'),
@@ -720,6 +465,10 @@ function isSinglePageMode() {
 
 function getFlipSize() {
   const visibleHeight = Math.floor(window.visualViewport?.height || window.innerHeight);
+  // The spread is drawn under the 3D tilt in .turnjs-reader, which magnifies the
+  // near edge. Shrinking the layout by this factor keeps the tilted book inside
+  // the stage.
+  const tiltFit = 0.94;
 
   if (isPhoneLayout()) {
     // Open two-page spread sized to the phone width. Facing portrait pages
@@ -733,19 +482,27 @@ function getFlipSize() {
       const measured = stage.clientWidth;
       if (measured > 200) availableWidth = measured;
     }
-    const width = Math.max(260, Math.min(720, Math.floor(availableWidth)));
+    const width = Math.max(260, Math.min(720, Math.floor(availableWidth * tiltFit)));
     const height = Math.max(200, Math.min(Math.floor(width * 0.82), Math.floor(visibleHeight * 0.52)));
     return { width, height };
   }
 
-  const maxWidth = Math.min(1100, Math.floor(window.innerWidth * 0.86));
-  const spreadWidth = Math.max(600, maxWidth);
+  // Fit the spread to the room the panel actually gives it, so the book fills
+  // the space beside it instead of sitting in a fixed-size box.
+  const maxWidth = 1500;
+  let availableWidth = Math.min(maxWidth, Math.floor(window.innerWidth * 0.92));
+  const measuredStage = document.querySelector('.reader-stage');
+  if (measuredStage && yearbookReader && !yearbookReader.hidden) {
+    const measured = measuredStage.clientWidth - 12;
+    if (measured > 300) availableWidth = Math.min(maxWidth, measured);
+  }
+  const spreadWidth = Math.max(600, Math.floor(availableWidth * tiltFit));
   // Cap by the truly visible height so short/landscape viewports still fit.
   const desiredHeight = Math.max(420, Math.floor(spreadWidth * 0.43));
   const heightCap = Math.max(300, visibleHeight - 160);
   return {
     width: spreadWidth,
-    height: Math.min(desiredHeight, heightCap)
+    height: Math.floor(Math.min(desiredHeight, heightCap) * tiltFit)
   };
 }
 
@@ -763,7 +520,7 @@ function applyDetailsState() {
 
 function setActiveDetails(pageNumber) {
   const page = activePages[Math.max(0, Math.min(activePages.length - 1, pageNumber - 1))];
-  if (!page) return;
+  if (!page || !Array.isArray(page.tags)) return;
 
   detailBindings.activityTitle.textContent = page.activityTitle;
   detailBindings.caption.textContent = page.caption;
@@ -792,7 +549,9 @@ function getPageAt(index) {
 }
 
 function pageMarkup(page) {
-  if (!page) {
+  // No artwork means a blank leaf: the inside front cover (page 1) and the
+  // filler pages that complete the last spread.
+  if (!page || !page.image) {
     return '<section class="album-page"><article class="print-layout blank-page"></article></section>';
   }
 
@@ -821,6 +580,7 @@ function buildBookShell() {
 
   flipbookElement.innerHTML = `
     <div class="book3d" data-book3d>
+      <div class="book-edge book-edge-tail" aria-hidden="true"></div>
       <div class="book-half left" data-static-left></div>
       <div class="book-half right" data-static-right></div>
       <div class="turn-sheet" data-turn-sheet hidden>
@@ -1054,6 +814,15 @@ function setActiveYearbookCard(index) {
   });
 }
 
+// The reader's page list. The first gallery image of every edition is its cover
+// artwork: that belongs on the shelf and in the opening animation, not inside
+// the book. Page 1 is therefore the blank inside front cover, and the activity
+// photos keep their original numbering (they start at page 2).
+function buildReaderPages(edition) {
+  const [, ...photos] = edition.pages || [];
+  return [{ image: '', pageNumber: 1, activityTitle: '' }, ...photos];
+}
+
 async function openReader(index, startPage) {
   const edition = yearbookData[index];
   if (!edition || !yearbookReader) return;
@@ -1080,7 +849,7 @@ async function openReader(index, startPage) {
     detailBindings.tags.textContent = edition.editionDetails.tags.join(', ');
   }
 
-  initTurnJs(edition.pages, startPage || 1);
+  initTurnJs(buildReaderPages(edition), startPage || 1);
   yearbookReader.hidden = false;
   yearbookReader.classList.add('is-visible');
   document.body.style.overflow = 'hidden';
@@ -1095,73 +864,13 @@ function hasReducedMotionPreference() {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 }
 
-function getBookOpeningDuration() {
-  if (hasReducedMotionPreference()) return Promise.resolve();
-
-  return new Promise((resolve) => {
-    if (!bookOpeningVideo) return resolve();
-
-    let settled = false;
-    let fallbackTimer = 0;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(fallbackTimer);
-      bookOpeningChromaKey?.stop();
-      resolve();
-    };
-    // Safety cap: prefer the video's real duration so the animation is never
-    // cut short; keep a fixed cap as a fallback if metadata is unavailable.
-    const duration = Number(bookOpeningVideo.duration);
-    const capMs = Number.isFinite(duration) && duration > 0 ? (duration + 3) * 1000 : 15000;
-    const startFallbackTimer = () => {
-      if (fallbackTimer) return;
-      fallbackTimer = window.setTimeout(finish, capMs);
-    };
-
-    bookOpeningVideo.addEventListener('ended', finish, { once: true });
-    bookOpeningVideo.addEventListener('error', finish, { once: true });
-    bookOpeningVideo.addEventListener('loadedmetadata', startFallbackTimer, { once: true });
-    startFallbackTimer();
-
-    // The tap/click that triggered the opening counts as user interaction, so
-    // keep the video's own audio when the browser allows it. If playback is
-    // refused, retry once muted so the animation still runs.
-    bookOpeningVideo.muted = false;
-
-    try {
-      const playPromise = bookOpeningVideo.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {
-          if (settled) return;
-          bookOpeningVideo.muted = true;
-          try {
-            const retryPromise = bookOpeningVideo.play();
-            if (retryPromise && typeof retryPromise.catch === 'function') {
-              retryPromise.catch(finish);
-            }
-          } catch (error) {
-            finish();
-          }
-        });
-      }
-    } catch (error) {
-      finish();
-    }
-  });
-}
-
 function cancelBookOpening() {
   if (!isBookOpening) return;
 
   bookOpeningSequence += 1;
   isBookOpening = false;
-  bookOpeningChromaKey?.stop();
+  bookOpeningAnimation?.stop();
   bookOpening?.classList.remove('is-playing');
-  if (bookOpeningVideo) {
-    bookOpeningVideo.pause();
-    bookOpeningVideo.currentTime = 0;
-  }
   if (bookOpening) {
     bookOpening.hidden = true;
     bookOpening.setAttribute('aria-hidden', 'true');
@@ -1188,7 +897,7 @@ async function openReaderAfterBookOpening(index, startPage) {
   const selectedBook = yearbookButtons[index];
   selectedBook?.classList.add('is-opening');
 
-  const cardTransitionDuration = hasReducedMotionPreference() ? 0 : 560;
+  const cardTransitionDuration = hasReducedMotionPreference() ? 0 : CARD_EXIT_MS;
   await new Promise((resolve) => window.setTimeout(resolve, cardTransitionDuration));
 
   if (sequence !== bookOpeningSequence) {
@@ -1200,28 +909,26 @@ async function openReaderAfterBookOpening(index, startPage) {
     bookOpeningLabel.textContent = `Opening ${edition.title}`;
   }
 
+  // Build and skin the animated book before the overlay appears.
+  prepareBookOpening(index);
+
   bookOpening.hidden = false;
   bookOpening.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   bookOpening.classList.remove('is-playing');
   void bookOpening.offsetWidth;
   bookOpening.classList.add('is-playing');
-  bookOpeningChromaKey?.start();
 
-  if (bookOpeningVideo) {
-    bookOpeningVideo.currentTime = 0;
-  }
   await Promise.all([
     preloadBasePages(),
-    getBookOpeningDuration()
+    runBookOpeningSequence(index)
   ]);
 
   if (sequence !== bookOpeningSequence) return;
 
   isBookOpening = false;
-  bookOpeningChromaKey?.stop();
+  bookOpeningAnimation?.stop();
   bookOpening.classList.remove('is-playing');
-  if (bookOpeningVideo) bookOpeningVideo.pause();
   bookOpening.hidden = true;
   bookOpening.setAttribute('aria-hidden', 'true');
   selectedBook?.classList.remove('is-opening');
