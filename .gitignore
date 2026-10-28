@@ -9,16 +9,12 @@ FRONT/FORMS/generated/*.pdf
 # Scratch / debug / temp artifacts
 *.log
 probe-mp4.js
-chroma-math.test.js
-qa-screenshot.js
-qa-embed.js
 chrome-profile/
 qa-results/
 placeholder-x.txt
 node_modules/
 package.json
 package-lock.json
-FRONT/scslaicares-qa.html
 qa-forms.js
 qa-covers.js
 qa-results-forms/

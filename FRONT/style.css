@@ -2409,10 +2409,6 @@ nav a:hover,
     opacity:.9;
 }
 
-.framework-watermark{
-    display:none;
-}
-
 .framework-chart h1{
     position:relative;
     z-index:2;
