@@ -1,0 +1,235 @@
+/* =========================================================================
+   SCSLAI — WELCOME POPUP  (styles)
+   -------------------------------------------------------------------------
+   The intro banner that greets a visitor before they use the site.
+     • Markup + behaviour ... welcome-popup.js
+     • Artwork ............. images/welcome/welcome-banner.*
+   Every rule below is scoped to the popup's own class names, so it cannot
+   change any other part of the website.
+   ========================================================================= */
+
+.scslai-welcome,
+.scslai-welcome * {
+    box-sizing: border-box;
+}
+
+.scslai-welcome[hidden] {
+    display: none !important;
+}
+
+/* While the popup is open the page behind it must not scroll. */
+body.scslai-welcome-open {
+    overflow: hidden;
+}
+
+.scslai-welcome {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;            /* above the site's widgets (9000–20000) and
+                                   form modals (99999) — it is a front door  */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: clamp(12px, 3vw, 40px);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.35;
+    color: #ffffff;
+    text-align: left;
+    opacity: 0;
+    transition: opacity 260ms ease;
+}
+
+.scslai-welcome.is-visible {
+    opacity: 1;
+}
+
+.scslai-welcome__backdrop {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(3, 13, 10, 0.87);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+/* -------------------------------------------------------------------------
+   THE BANNER CARD
+   The card is sized from the artwork's own aspect ratio, so the whole
+   banner (including the gold border drawn in the image) always fits on
+   screen — tall phones and short laptops included.
+   ------------------------------------------------------------------------- */
+
+.scslai-welcome__card {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: min(1120px, 100%, calc((100vh - 80px) * var(--scslai-welcome-ratio, 1.7758)));
+    width: min(1120px, 100%, calc((100dvh - 80px) * var(--scslai-welcome-ratio, 1.7758)));
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba(216, 189, 116, 0.55);
+    border-radius: 18px;
+    background: #04150f;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
+    opacity: 0;
+    -webkit-transform: translateY(14px) scale(0.985);
+    transform: translateY(14px) scale(0.985);
+    transition: opacity 300ms ease, -webkit-transform 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
+    transition: opacity 300ms ease, transform 320ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.scslai-welcome.is-visible .scslai-welcome__card {
+    opacity: 1;
+    -webkit-transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1);
+}
+
+.scslai-welcome__card picture {
+    display: block;
+}
+
+.scslai-welcome__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    object-fit: contain;
+    cursor: pointer;            /* clicking the banner also enters the site */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+}
+
+/* -------------------------------------------------------------------------
+   CLOSE BUTTON (×) — always visible in the banner's top-right corner
+   ------------------------------------------------------------------------- */
+
+.scslai-welcome__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(216, 189, 116, 0.7);
+    border-radius: 50%;
+    background: rgba(4, 21, 15, 0.8);
+    color: #f6e7b8;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    transition: background 180ms ease, color 180ms ease, border-color 180ms ease,
+                -webkit-transform 180ms ease;
+    transition: background 180ms ease, color 180ms ease, border-color 180ms ease,
+                transform 180ms ease;
+}
+
+.scslai-welcome__close svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+}
+
+.scslai-welcome__close:hover,
+.scslai-welcome__close:focus-visible {
+    background: #d8bd74;
+    border-color: #f0d27a;
+    color: #0a1c15;
+    -webkit-transform: scale(1.06);
+    transform: scale(1.06);
+}
+
+.scslai-welcome__close:focus-visible {
+    outline: 2px solid #f0d27a;
+    outline-offset: 3px;
+}
+
+.scslai-welcome__close:active {
+    -webkit-transform: scale(0.96);
+    transform: scale(0.96);
+}
+
+/* -------------------------------------------------------------------------
+   SMALL SCREENS
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+    .scslai-welcome {
+        padding: 10px;
+    }
+
+    .scslai-welcome__card {
+        width: min(100%, calc((100vh - 28px) * var(--scslai-welcome-ratio, 1.7758)));
+        width: min(100%, calc((100dvh - 28px) * var(--scslai-welcome-ratio, 1.7758)));
+        border-radius: 14px;
+    }
+
+    .scslai-welcome__close {
+        top: 8px;
+        right: 8px;
+        width: 38px;
+        height: 38px;
+    }
+
+    .scslai-welcome__close svg {
+        width: 15px;
+        height: 15px;
+    }
+}
+
+/* Keep the corner button easy to tap on very small phones. */
+@media (max-width: 420px) {
+    .scslai-welcome__close {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   MOTION / PRINT
+   ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .scslai-welcome,
+    .scslai-welcome__card {
+        transition: none;
+    }
+
+    .scslai-welcome__card {
+        -webkit-transform: none;
+        transform: none;
+    }
+
+    .scslai-welcome__close {
+        transition: none;
+    }
+
+    .scslai-welcome__close:hover,
+    .scslai-welcome__close:focus-visible {
+        -webkit-transform: none;
+        transform: none;
+    }
+}
+
+@media print {
+    .scslai-welcome {
+        display: none !important;
+    }
+}
