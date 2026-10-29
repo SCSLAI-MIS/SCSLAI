@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCSLAIcares - SCSLAI</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="scslaicares.css?v=20261029a">
+    <link rel="stylesheet" href="scslaicares.css?v=20261029b">
     <!-- ANNIVERSARY GAMES (temporary) — switch hunts with ONE line in
          Games/game-control.js:  const ACTIVE_GAME = "heart";  (or "star").
          Delete the whole Games/ folder after the anniversary. -->
@@ -144,7 +144,7 @@
                             <button type="button" class="reader-details-toggle" data-toggle-details aria-expanded="false" aria-controls="reader-details">View activity details</button>
                             <div class="reader-details" id="reader-details" aria-live="polite">
                                 <div class="reader-detail-card reader-detail-main">
-                                    <p class="reader-detail-label">Content</p>
+                                    <p class="reader-detail-label">About the Activity</p>
                                     <h3 class="reader-activity-title" data-activity-title>Activity Title</h3>
                                     <p class="reader-activity-caption" data-activity-caption></p>
                                     <p class="reader-activity-narrative" data-activity-narrative></p>
@@ -159,6 +159,7 @@
                                         <div class="meta-item"><span>Remarks</span><p data-meta-remarks></p></div>
                                         <!-- Contact rows: only rendered for editions whose
                                              editionDetails define them (see script.js). -->
+                                        <p class="meta-group-label" data-meta-contact-group>Contact Information</p>
                                         <div class="meta-item"><span>Contact Person</span><p data-meta-contact-person></p></div>
                                         <div class="meta-item"><span>Contact Number</span><p data-meta-contact-number></p></div>
                                         <div class="meta-item meta-contact-address"><span>Contact Address</span><p data-meta-contact-address></p></div>
@@ -237,7 +238,7 @@
         </div>
     </footer>
     <script src="animation/book-animation.js?v=1"></script>
-    <script src="script.js?v=20261029a"></script>
+    <script src="script.js?v=20261029b"></script>
     <script src="Games/game-control.js"></script>
     <script src="Games/heart-game.js"></script>
     <script src="facebook-live.js?v=9"></script>

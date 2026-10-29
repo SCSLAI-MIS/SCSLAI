@@ -1464,7 +1464,9 @@ nav a:hover,
     gap: 0.6rem 0.9rem;
 }
 
-.meta-item span {
+/* Only the row's own label (a direct child) — the tag chips further down are
+   spans too and must keep their own look. */
+.meta-item > span {
     display: block;
     margin-bottom: 0.15rem;
     color: #705837;
@@ -1496,6 +1498,106 @@ nav a:hover,
 .meta-contact-address,
 .meta-landmark {
     grid-column: 1 / -1;
+}
+
+/* ---------- Activity details: presentation ---------- */
+
+/* The content card opens with a warm hairline, then reads as a lead sentence
+   followed by the full story. */
+.reader-detail-main {
+    position: relative;
+    overflow: hidden;
+    padding: 1.05rem 1.15rem 1.15rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.72) 100%);
+}
+
+.reader-detail-main::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #b4853a 0%, rgba(180, 133, 58, 0) 80%);
+}
+
+/* Label, with a rule that fills the rest of the line. */
+.reader-detail-main .reader-detail-label {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.6rem;
+}
+
+.reader-detail-main .reader-detail-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(112, 88, 55, 0.32), rgba(112, 88, 55, 0));
+}
+
+.reader-detail-main .reader-activity-title {
+    margin: 0 0 0.65rem;
+    font-size: 1.5rem;
+    line-height: 1.25;
+}
+
+/* Caption = the one-line gist, set as an indented lead. */
+.reader-activity-caption {
+    margin: 0 0 1rem;
+    padding-left: 0.85rem;
+    border-left: 3px solid rgba(180, 133, 58, 0.5);
+    font-family: "Playfair Display", Georgia, serif;
+    font-style: italic;
+    font-size: 1.03rem;
+}
+
+/* Narrative = the full story, set apart by a hairline and a readable measure. */
+.reader-activity-narrative {
+    margin: 0;
+    padding-top: 0.95rem;
+    border-top: 1px solid rgba(120, 104, 81, 0.22);
+    max-width: 64ch;
+}
+
+/* Contact rows sit under their own heading so they read as one block instead
+   of loose rows at the end of the grid. */
+.meta-group-label {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin: 0.45rem 0 -0.1rem;
+    color: #705837;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.meta-group-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(112, 88, 55, 0.28), rgba(112, 88, 55, 0));
+}
+
+.meta-group-label[hidden] {
+    display: none;
+}
+
+/* Tags render as chips instead of one comma-separated line. */
+.meta-tag {
+    display: inline-block;
+    margin: 0 0.35rem 0.35rem 0;
+    padding: 0.16rem 0.6rem;
+    border: 1px solid rgba(180, 133, 58, 0.35);
+    border-radius: 999px;
+    background: rgba(180, 133, 58, 0.12);
+    color: #5a4426;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
 }
 
 /* ===========================

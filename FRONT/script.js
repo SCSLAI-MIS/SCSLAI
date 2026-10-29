@@ -130,6 +130,8 @@ const yearbookData = [
         photographer: 'SCSLAI Documentation Team',
         album: '2025 Aeta Community Outreach Collection',
         remarks: 'A meaningful outreach initiative that strengthened SCSLAI’s commitment to serving and supporting communities in need.',
+        contactPerson: 'Montalban MENRO',
+        contactNumber: '09452654144',
         tags: ['2025', 'outreach', 'Aeta community', 'Calumpang', 'Pampanga', 'community service']
     }
 },
@@ -332,6 +334,23 @@ function setOptionalDetail(binding, value) {
   binding.textContent = text;
   const item = binding.closest('.meta-item');
   if (item) item.hidden = !text;
+}
+
+// Heading that sits above the optional contact rows; hidden for editions that
+// carry no contact information at all.
+const contactGroupLabel = document.querySelector('[data-meta-contact-group]');
+
+// Tags are painted as chips rather than one comma-separated line.
+function renderTagChips(container, tags) {
+  if (!container) return;
+  container.replaceChildren(
+    ...(tags || []).map((tag) => {
+      const chip = document.createElement('span');
+      chip.className = 'meta-tag';
+      chip.textContent = tag;
+      return chip;
+    })
+  );
 }
 
 let activeYearbookIndex = -1;
@@ -880,13 +899,19 @@ async function openReader(index, startPage) {
     detailBindings.photographer.textContent = edition.editionDetails.photographer;
     detailBindings.album.textContent = edition.editionDetails.album;
     detailBindings.remarks.textContent = edition.editionDetails.remarks;
-    detailBindings.tags.textContent = edition.editionDetails.tags.join(', ');
+    renderTagChips(detailBindings.tags, edition.editionDetails.tags);
 
-    // Optional rows (contact person / number / address) — shown only when the
-    // edition defines them.
+    // Optional rows (contact person / number / address / landmark) — shown only
+    // when the edition defines them, under their own heading.
     Object.keys(optionalDetailBindings).forEach((key) => {
       setOptionalDetail(optionalDetailBindings[key], edition.editionDetails[key]);
     });
+    if (contactGroupLabel) {
+      contactGroupLabel.hidden = !Object.keys(optionalDetailBindings).some((key) => {
+        const value = edition.editionDetails[key];
+        return value != null && String(value).trim() !== '';
+      });
+    }
   }
 
   initTurnJs(buildReaderPages(edition), startPage || 1);
