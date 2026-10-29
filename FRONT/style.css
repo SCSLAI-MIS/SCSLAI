@@ -3182,18 +3182,46 @@ nav a:hover,
     border-radius:8px;
 }
 
-.announcement-posters img.slide-up{
-    animation: slideUp 0.35s ease-out forwards;
+.announcement-posters img.slide-up,
+.announcement-posters img.slide-next,
+.announcement-posters img.slide-previous{
+    animation-duration:.38s;
+    animation-timing-function:ease-out;
+    animation-fill-mode:both;
 }
 
-@keyframes slideUp{
-    from{
-        opacity:0;
-        transform:translateY(30px);
-    }
-    to{
-        opacity:1;
-        transform:translateY(0);
+.announcement-posters img.slide-up{
+    animation-name:announcementFadeIn;
+}
+
+.announcement-posters img.slide-next{
+    animation-name:announcementSlideNext;
+}
+
+.announcement-posters img.slide-previous{
+    animation-name:announcementSlidePrevious;
+}
+
+@keyframes announcementFadeIn{
+    from{ opacity:0; }
+    to{ opacity:1; }
+}
+
+@keyframes announcementSlideNext{
+    from{ opacity:0; transform:translateX(22px); }
+    to{ opacity:1; transform:translateX(0); }
+}
+
+@keyframes announcementSlidePrevious{
+    from{ opacity:0; transform:translateX(-22px); }
+    to{ opacity:1; transform:translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .announcement-posters img.slide-up,
+    .announcement-posters img.slide-next,
+    .announcement-posters img.slide-previous{
+        animation-duration:.01ms;
     }
 }
 
@@ -6203,7 +6231,6 @@ header nav .dropdown.active .dropbtn {
 .calculator-dialog {
     box-shadow: 0 18px 30px rgba(0, 0, 0, 0.24) !important;
 }
-
 
 
 

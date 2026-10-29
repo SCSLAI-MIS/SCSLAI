@@ -1121,11 +1121,9 @@ if (slides.length > 0) {
 }
 
 const announcementImages = [
-  {src: 'images/Annoncements/calamity-loan-2.png', alt: 'Final Educational Poster'},
   {src: 'images/Annoncements/Authority-to-deduct.jpg', alt: 'Announcement 1'},
-  {src: 'images/Annoncements/TLA.jpg', alt: 'Announcement 3'},
-  {src: 'images/Annoncements/anniv.jpg', alt: 'ANNIVERSARY'},
-  {src: 'images/Annoncements/STD-PT.png', alt: 'Announcement 2'}
+  {src: 'images/Annoncements/TLA.jpg', alt: 'Announcement 2'},
+  {src: 'images/Annoncements/GA.jpg', alt: 'Announcement 3'},
 ];
 const announcementImg = document.querySelector('.announcement-posters img');
 const announcementPrev = document.querySelector('.announcement-control.prev');
@@ -1134,21 +1132,29 @@ const announcementDotsWrap = document.querySelector('.announcement-dots');
 let announcementIndex = 0;
 let announcementTimer = null;
 let announcementDots = [];
-// Preloaded Image objects — this is what makes next/prev feel instant.
-// Without this, each click fetches + decodes a 1.5–3.6 MB file on demand.
+let announcementRequest = 0;
 const announcementCache = [];
 
+function loadAnnouncementImage(index) {
+  if (announcementCache[index]) return announcementCache[index];
+  const item = announcementImages[index];
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = item.src;
+  announcementCache[index] = typeof image.decode === 'function'
+    ? image.decode().then(() => image)
+    : new Promise((resolve, reject) => {
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Failed to load ' + item.src));
+      });
+  return announcementCache[index];
+}
+
 function preloadAnnouncements() {
-  announcementImages.forEach((item, i) => {
-    if (announcementCache[i]) return;
-    const img = new Image();
-    img.decoding = 'async';
-    // decode() warms the bitmap so the swap doesn't jank on first view
-    img.src = item.src;
-    if (typeof img.decode === 'function') {
-      img.decode().catch(() => {});
-    }
-    announcementCache[i] = img;
+  announcementImages.forEach((item, index) => {
+    loadAnnouncementImage(index).catch((error) => {
+      console.error('Unable to preload announcement image:', item.src, error);
+    });
   });
 }
 
@@ -1158,34 +1164,34 @@ function updateAnnouncementDots() {
   });
 }
 
-function showAnnouncement(index) {
+async function showAnnouncement(index, direction) {
   if (!announcementImg) return;
   const safeIndex = (index + announcementImages.length) % announcementImages.length;
   const next = announcementImages[safeIndex];
-  // Instant UI feedback — dots/index update first so clicks feel responsive
+  const request = ++announcementRequest;
+  try {
+    await loadAnnouncementImage(safeIndex);
+  } catch (error) {
+    console.error('Unable to display announcement image:', next.src, error);
+    return;
+  }
+
+  if (request !== announcementRequest) return;
   announcementIndex = safeIndex;
   updateAnnouncementDots();
-
-  announcementImg.classList.remove('slide-up');
+  announcementImg.classList.remove('slide-up', 'slide-next', 'slide-previous');
   void announcementImg.offsetWidth;
-  // Only touch src if it actually changed (avoids reload flash on same slide)
-  if (!announcementImg.getAttribute('src') || !announcementImg.src.endsWith(next.src)) {
-    announcementImg.src = next.src;
-  }
+  announcementImg.src = next.src;
   announcementImg.alt = next.alt;
-  announcementImg.classList.add('slide-up');
-
-  // Keep neighbours warm so rapid next/prev never waits on network
-  const warm = (announcementIndex + 1) % announcementImages.length;
-  announcementCache[warm]?.decode?.().catch(() => {});
+  announcementImg.classList.add(direction === 1 ? 'slide-next' : direction === -1 ? 'slide-previous' : 'slide-up');
 }
 
 function nextAnnouncement() {
-  showAnnouncement(announcementIndex + 1);
+  showAnnouncement(announcementIndex + 1, 1);
 }
 
 function prevAnnouncement() {
-  showAnnouncement(announcementIndex - 1);
+  showAnnouncement(announcementIndex - 1, -1);
 }
 
 function startAnnouncementAuto() {
@@ -1202,7 +1208,6 @@ function stopAnnouncementAuto() {
 
 if (announcementImg) {
   preloadAnnouncements();
-  announcementImg.classList.add('slide-up');
   if (announcementDotsWrap) {
     announcementDots = announcementImages.map((item, i) => {
       const dot = document.createElement('button');
@@ -1210,7 +1215,7 @@ if (announcementImg) {
       dot.className = 'announcement-dot' + (i === 0 ? ' active' : '');
       dot.setAttribute('aria-label', 'Show announcement ' + (i + 1) + ': ' + item.alt);
       dot.addEventListener('click', () => {
-        showAnnouncement(i);
+        showAnnouncement(i, i >= announcementIndex ? 1 : -1);
         startAnnouncementAuto();
       });
       announcementDotsWrap.appendChild(dot);
@@ -1229,6 +1234,7 @@ if (announcementImg) {
       startAnnouncementAuto();
     });
   }
+  showAnnouncement(0, 0);
   const announcementBox = announcementImg.closest('.announcement-posters');
   if (announcementBox) {
     announcementBox.addEventListener('mouseenter', stopAnnouncementAuto);
@@ -2252,4 +2258,3 @@ if (lightbox && lightboxImg) {
       }
   });
 }
-
