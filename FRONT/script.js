@@ -130,6 +130,8 @@ const yearbookData = [
         photographer: 'SCSLAI Documentation Team',
         album: '2025 Aeta Community Outreach Collection',
         remarks: 'A meaningful outreach initiative that strengthened SCSLAI’s commitment to serving and supporting communities in need.',
+        contactPerson: 'Montalban MENRO',
+        contactNumber: '09452654144',
         tags: ['2025', 'outreach', 'Aeta community', 'Calumpang', 'Pampanga', 'community service']
     }
 },
@@ -149,6 +151,9 @@ const yearbookData = [
         photographer: 'SCSLAI Documentation Team',
         album: '2024 Tree Planting Activity Collection',
         remarks: 'A meaningful environmental initiative that encouraged community involvement and contributed to the preservation and restoration of green spaces.',
+        contactPerson: 'Montalban MENRO',
+        contactNumber: '09452654144',
+        contactAddress: 'J.P. Rizal Street, Barangay Balite, Rodriguez, Rizal, Rodriguez, Philippines, 1860',
         tags: ['2024', 'tree planting', 'Rizal', 'environment', 'conservation', 'community']
     }
 },
@@ -168,6 +173,8 @@ const yearbookData = [
         photographer: 'SCSLAI Documentation Team',
         album: 'Silungan ng Pag-asa Collection',
         remarks: 'A meaningful community initiative that provided support and hope to beneficiaries in need.',
+        contactAddress: '1468-B Peñafrancia St., Brgy. 682 Zone 74, Paco, Manila',
+        contactLandmark: 'Near Plaza Dilao and walking distance from Seaoil Gas Station going to Pedro Gil St.',
         tags: ['2022-2023', 'Silungan ng Pag-asa', 'community', 'outreach', 'support', 'hope']
     }
 }
@@ -311,6 +318,41 @@ const detailBindings = {
   tags: document.querySelector('[data-meta-tags]')
 };
 
+// Optional rows, filled in by editions that carry them (currently only the 2024
+// tree planting activity). The shared markup in scslaicares.html is the same
+// for every edition, so a row with no value is hidden instead of left blank.
+const optionalDetailBindings = {
+  contactPerson: document.querySelector('[data-meta-contact-person]'),
+  contactNumber: document.querySelector('[data-meta-contact-number]'),
+  contactAddress: document.querySelector('[data-meta-contact-address]'),
+  contactLandmark: document.querySelector('[data-meta-contact-landmark]')
+};
+
+function setOptionalDetail(binding, value) {
+  if (!binding) return;
+  const text = value == null ? '' : String(value).trim();
+  binding.textContent = text;
+  const item = binding.closest('.meta-item');
+  if (item) item.hidden = !text;
+}
+
+// Heading that sits above the optional contact rows; hidden for editions that
+// carry no contact information at all.
+const contactGroupLabel = document.querySelector('[data-meta-contact-group]');
+
+// Tags are painted as chips rather than one comma-separated line.
+function renderTagChips(container, tags) {
+  if (!container) return;
+  container.replaceChildren(
+    ...(tags || []).map((tag) => {
+      const chip = document.createElement('span');
+      chip.className = 'meta-tag';
+      chip.textContent = tag;
+      return chip;
+    })
+  );
+}
+
 let activeYearbookIndex = -1;
 let activePages = [];
 let resizeRaf = null;
@@ -331,16 +373,25 @@ const photoLightboxImage = photoLightbox?.querySelector('[data-photo-image]') ||
 const photoLightboxCaption = photoLightbox?.querySelector('[data-photo-caption]') || null;
 const photoLightboxCounter = photoLightbox?.querySelector('[data-photo-counter]') || null;
 
+// The lightbox walks only pages that actually carry artwork. The reader's page
+// 1 is the blank inside cover (the edition's cover artwork is not a page), and
+// stepping onto it produced an empty frame labelled "Page 1 of N".
+function getPhotoPages() {
+  return activePages.filter((page) => page && page.image);
+}
+
 function getPhotoAt(index) {
-  if (!activePages.length) return null;
-  const safe = (index + activePages.length) % activePages.length;
-  return activePages[safe];
+  const pages = getPhotoPages();
+  if (!pages.length) return null;
+  const safe = (index + pages.length) % pages.length;
+  return pages[safe];
 }
 
 function renderPhotoLightbox() {
   const page = getPhotoAt(photoLightboxIndex);
   if (!page || !photoLightboxImage) return;
-  photoLightboxIndex = activePages.indexOf(page);
+  const pages = getPhotoPages();
+  photoLightboxIndex = pages.indexOf(page);
   photoLightboxImage.src = getResolvedImageSource(page.image);
   photoLightboxImage.alt = page.activityTitle || ('Page ' + page.pageNumber);
   if (photoLightboxCaption) {
@@ -352,8 +403,9 @@ function renderPhotoLightbox() {
 }
 
 function openPhotoLightbox(pageNumber) {
-  if (!photoLightbox || !activePages.length) return;
-  const idx = activePages.findIndex((p) => p.pageNumber === Number(pageNumber));
+  const pages = getPhotoPages();
+  if (!photoLightbox || !pages.length) return;
+  const idx = pages.findIndex((p) => p.pageNumber === Number(pageNumber));
   photoLightboxIndex = idx >= 0 ? idx : 0;
   photoLightboxLastFocus = document.activeElement;
   photoLightbox.hidden = false;
@@ -378,8 +430,9 @@ function closePhotoLightbox() {
 }
 
 function stepPhotoLightbox(delta) {
-  if (!photoLightboxOpen || !activePages.length) return;
-  photoLightboxIndex = (photoLightboxIndex + delta + activePages.length) % activePages.length;
+  const pages = getPhotoPages();
+  if (!photoLightboxOpen || !pages.length) return;
+  photoLightboxIndex = (photoLightboxIndex + delta + pages.length) % pages.length;
   renderPhotoLightbox();
 }
 
@@ -846,7 +899,19 @@ async function openReader(index, startPage) {
     detailBindings.photographer.textContent = edition.editionDetails.photographer;
     detailBindings.album.textContent = edition.editionDetails.album;
     detailBindings.remarks.textContent = edition.editionDetails.remarks;
-    detailBindings.tags.textContent = edition.editionDetails.tags.join(', ');
+    renderTagChips(detailBindings.tags, edition.editionDetails.tags);
+
+    // Optional rows (contact person / number / address / landmark) — shown only
+    // when the edition defines them, under their own heading.
+    Object.keys(optionalDetailBindings).forEach((key) => {
+      setOptionalDetail(optionalDetailBindings[key], edition.editionDetails[key]);
+    });
+    if (contactGroupLabel) {
+      contactGroupLabel.hidden = !Object.keys(optionalDetailBindings).some((key) => {
+        const value = edition.editionDetails[key];
+        return value != null && String(value).trim() !== '';
+      });
+    }
   }
 
   initTurnJs(buildReaderPages(edition), startPage || 1);
@@ -1484,11 +1549,11 @@ const loanMatrix = {
       { id: 'business', label: 'Business Loan', rates: { 1: 12, 2: 12, 3: 12, 4: 12, 5: 12 } },
       { id: 'character', label: 'Character Loan', rates: { 1: 12, 2: 12, 3: 15 } },
       { id: 'educationalCasual', label: 'Educational Loan (Casual)', rates: { 1: 12, 2: 12 }, max: 200000 },
-      { id: 'educational', label: 'Educational Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 }, max: 200000 },
+      { id: 'educational', label: 'Educational Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15 }, max: 200000 },
       { id: 'emergencyRata', label: 'Emergency RATA Loan', rates: { 1: 12, 2: 12 } },
       { id: 'equitable', label: 'Equitable Loan', rates: { 1: 10 } },
       { id: 'equity', label: 'Equity Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } },
-      { id: 'healthEmergency', label: 'Health Emergency Loan PR', rates: { 1: 12, 2: 12, 3: 12 }, max: 400000 },
+      { id: 'healthEmergency', label: 'Health Emergency Loan PR', rates: { 1: 12, 2: 12 }, max: 400000 },
       { id: 'help', label: 'Help Loan DIR', rates: { 1: 12, 2: 12, 3: 12 } },
       { id: 'housing', label: 'Housing Loan', rates: { 1: 8, 2: 8, 3: 8, 4: 8, 5: 8 }, min: 600000, max: 2000000 },
       { id: 'longTerm', label: 'Long Term Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } },
@@ -1520,10 +1585,10 @@ const loanMatrix = {
       { id: 'allowance', label: 'Allowance Loan', rates: { 1: 12, 2: 12, 3: 12, 4: 12, 5: 12 }, max: 130000 },
       { id: 'allowanceCasual', label: 'Allowance Loan (Casual)', rates: { 1: 12, 2: 12 }, max: 40000 },
       { id: 'business', label: 'Business Loan', rates: { 1: 12, 2: 12, 3: 12, 4: 12, 5: 12 } },
-      { id: 'educational', label: 'Educational Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } },
+      { id: 'educational', label: 'Educational Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15 } },
       { id: 'educationalCasual', label: 'Educational Loan (Casual)', rates: { 1: 12, 2: 12 }, max: 200000 },
       { id: 'emergencyRata', label: 'Emergency RATA Loan', rates: { 1: 12, 2: 12 } },
-      { id: 'healthEmergency', label: 'Health Emergency Loan PR', rates: { 1: 12, 2: 12, 3: 12 }, max: 400000 },
+      { id: 'healthEmergency', label: 'Health Emergency Loan PR', rates: { 1: 12, 2: 12 }, max: 400000 },
       { id: 'housing', label: 'Housing Loan', rates: { 1: 8, 2: 8, 3: 8, 4: 8, 5: 8 }, min: 600000, max: 2000000 },
       { id: 'maxi', label: 'Maxi Loan', rates: { 1: 6, 2: 8, 3: 10, 4: 12, 5: 14 }, max: 500000 },
       { id: 'meal', label: 'MEAL', rates: { 2: 8, 3: 10 }, min: 50000, max: 150000 },

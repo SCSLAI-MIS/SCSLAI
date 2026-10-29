@@ -67,7 +67,7 @@ window.SCSLAI_FACEBOOK_LIVE = {
     /* ---------------------------------------------------------------------
        1) VIDEO LINK  ←←← PASTE YOUR LINK HERE (YouTube or Facebook)
        --------------------------------------------------------------------- */
-    liveUrl: 'https://www.facebook.com/senateph/videos/5559722767585540',
+    liveUrl: "",
 
     /* ---------------------------------------------------------------------
        2) SHOW FROM  (start date & time)
