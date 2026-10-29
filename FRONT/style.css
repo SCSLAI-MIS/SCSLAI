@@ -1485,6 +1485,19 @@ nav a:hover,
     grid-column: 1 / -1;
 }
 
+/* Rows that only some editions fill in (contact person / number / address in
+   script.js) collapse out of the grid instead of leaving an empty label. */
+.meta-item[hidden] {
+    display: none;
+}
+
+/* The contact address and the walking landmark are full sentences / long
+   strings, so they get the whole width of the two-column meta grid. */
+.meta-contact-address,
+.meta-landmark {
+    grid-column: 1 / -1;
+}
+
 /* ===========================
    RESPONSIVE READER
 =========================== */

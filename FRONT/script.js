@@ -149,6 +149,9 @@ const yearbookData = [
         photographer: 'SCSLAI Documentation Team',
         album: '2024 Tree Planting Activity Collection',
         remarks: 'A meaningful environmental initiative that encouraged community involvement and contributed to the preservation and restoration of green spaces.',
+        contactPerson: 'Montalban MENRO',
+        contactNumber: '09452654144',
+        contactAddress: 'J.P. Rizal Street, Barangay Balite, Rodriguez, Rizal, Rodriguez, Philippines, 1860',
         tags: ['2024', 'tree planting', 'Rizal', 'environment', 'conservation', 'community']
     }
 },
@@ -168,6 +171,8 @@ const yearbookData = [
         photographer: 'SCSLAI Documentation Team',
         album: 'Silungan ng Pag-asa Collection',
         remarks: 'A meaningful community initiative that provided support and hope to beneficiaries in need.',
+        contactAddress: '1468-B Peñafrancia St., Brgy. 682 Zone 74, Paco, Manila',
+        contactLandmark: 'Near Plaza Dilao and walking distance from Seaoil Gas Station going to Pedro Gil St.',
         tags: ['2022-2023', 'Silungan ng Pag-asa', 'community', 'outreach', 'support', 'hope']
     }
 }
@@ -310,6 +315,24 @@ const detailBindings = {
   remarks: document.querySelector('[data-meta-remarks]'),
   tags: document.querySelector('[data-meta-tags]')
 };
+
+// Optional rows, filled in by editions that carry them (currently only the 2024
+// tree planting activity). The shared markup in scslaicares.html is the same
+// for every edition, so a row with no value is hidden instead of left blank.
+const optionalDetailBindings = {
+  contactPerson: document.querySelector('[data-meta-contact-person]'),
+  contactNumber: document.querySelector('[data-meta-contact-number]'),
+  contactAddress: document.querySelector('[data-meta-contact-address]'),
+  contactLandmark: document.querySelector('[data-meta-contact-landmark]')
+};
+
+function setOptionalDetail(binding, value) {
+  if (!binding) return;
+  const text = value == null ? '' : String(value).trim();
+  binding.textContent = text;
+  const item = binding.closest('.meta-item');
+  if (item) item.hidden = !text;
+}
 
 let activeYearbookIndex = -1;
 let activePages = [];
@@ -858,6 +881,12 @@ async function openReader(index, startPage) {
     detailBindings.album.textContent = edition.editionDetails.album;
     detailBindings.remarks.textContent = edition.editionDetails.remarks;
     detailBindings.tags.textContent = edition.editionDetails.tags.join(', ');
+
+    // Optional rows (contact person / number / address) — shown only when the
+    // edition defines them.
+    Object.keys(optionalDetailBindings).forEach((key) => {
+      setOptionalDetail(optionalDetailBindings[key], edition.editionDetails[key]);
+    });
   }
 
   initTurnJs(buildReaderPages(edition), startPage || 1);
