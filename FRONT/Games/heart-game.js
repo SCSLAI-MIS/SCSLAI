@@ -202,50 +202,11 @@
       document.documentElement.classList.remove('heart-game-active');
     }
 
-    // Finale: big word-only WELCOME blast after the prize card closes.
-    var welcomeShown = false;
-    function showWelcomeBlast() {
-      if (welcomeShown) return;
-      welcomeShown = true;
-      try {
-        if (localStorage.getItem(END_KEY) !== '1') return;
-      } catch (e) {}
-      var welcome = document.createElement('div');
-      welcome.className = 'easter-egg-welcome-overlay';
-      welcome.setAttribute('role', 'alert');
-      welcome.innerHTML = '<h2 class="easter-egg-welcome-text">WELCOME TO <span>SCSLAI WEBSITE</span></h2>';
-      document.body.appendChild(welcome);
-      var colors = ['#12503c', '#78fdc6', '#ffd166', '#ef476f', '#4ec291', '#ffffff'];
-      for (var i = 0; i < 130; i++) {
-        var piece = document.createElement('span');
-        piece.className = 'easter-egg-welcome-confetti';
-        piece.style.left = Math.random() * 100 + '%';
-        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-        piece.style.animationDuration = (1.8 + Math.random() * 2) + 's';
-        piece.style.animationDelay = (Math.random() * 0.8) + 's';
-        welcome.appendChild(piece);
-      }
-      requestAnimationFrame(function () { welcome.classList.add('show'); });
-      var done = false;
-      function hideWelcome() {
-        if (done) return;
-        done = true;
-        welcome.classList.remove('show');
-        setTimeout(function () { if (welcome.parentNode) welcome.parentNode.removeChild(welcome); }, 400);
-      }
-      welcome.addEventListener('click', hideWelcome);
-      document.addEventListener('keydown', function esc(e) {
-        if (e.key === 'Escape') { hideWelcome(); document.removeEventListener('keydown', esc); }
-      });
-      setTimeout(hideWelcome, 6000);
-    }
-
     if (closeBtn) closeBtn.addEventListener('click', function () {
       var list = readFound();
       if (list.length >= TOTAL_HEARTS && closeBtn.textContent.indexOf('Hope you enjoyed') !== -1) {
         finishHuntForever();
         closePopup();
-        setTimeout(showWelcomeBlast, 350);
         return;
       }
       closePopup();
@@ -253,18 +214,12 @@
 
     overlay.addEventListener('click', function (e) {
       if (e.target !== overlay) return;
-      var wasClaimed = false;
-      try { wasClaimed = localStorage.getItem(END_KEY) === '1'; } catch (e) {}
       closePopup();
-      if (wasClaimed) setTimeout(showWelcomeBlast, 350);
     });
 
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape' || !overlay.classList.contains('show')) return;
-      var wasClaimed = false;
-      try { wasClaimed = localStorage.getItem(END_KEY) === '1'; } catch (e) {}
       closePopup();
-      if (wasClaimed) setTimeout(showWelcomeBlast, 350);
     });
 
     function bindHeart(el) {
