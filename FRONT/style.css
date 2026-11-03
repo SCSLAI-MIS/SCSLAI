@@ -6634,9 +6634,6 @@ header nav .dropdown.active .dropbtn {
 
 
 
-<<<<<<< HEAD
-
-
 /* ===========================
    Photo lightbox — used by the yearbook reader (scslaicares.html) and by
    the home-page event albums. Moved here from scslaicares.css so both pages
@@ -6883,5 +6880,3 @@ header nav .dropdown.active .dropbtn {
         max-height: calc(100vh - 15rem);
     }
 }
-=======
->>>>>>> upstream/main

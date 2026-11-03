@@ -1301,22 +1301,6 @@ function preloadAnnouncements() {
     loadAnnouncementImage(index).catch((error) => {
       console.error('Unable to preload announcement image:', item.src, error);
     });
-function preloadAnnouncements() {
-  // Only the poster on screen and the one after it are warmed up front.
-  // Pulling all five (~9.5 MB) was the single biggest hit on a phone, and
-  // showAnnouncement() already warms the neighbour as the visitor browses.
-  [0, 1].forEach((i) => {
-    const item = announcementImages[i];
-    if (!item || announcementCache[i]) return;
-
-    const img = new Image();
-    img.decoding = 'async';
-    // decode() warms the bitmap so the swap doesn't jank on first view
-    img.src = item.src;
-    if (typeof img.decode === 'function') {
-      img.decode().catch(() => {});
-    }
-    announcementCache[i] = img;
   });
 }
 
