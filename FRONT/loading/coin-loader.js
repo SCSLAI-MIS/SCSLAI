@@ -1,5 +1,5 @@
 /* =========================================================================
-   SCSLAI — COIN LOADER  (behaviour)
+   SCSLAI — LOADING ANIMATION  (behaviour)
    -------------------------------------------------------------------------
    The one loading animation used everywhere the site has to wait:
 
@@ -12,7 +12,7 @@
 
    API — window.SCSLAILoader
    -------------------------------------------------------------------------
-     show(options)                 full-screen overlay (scrim + coin + label)
+     show(options)                 full-screen overlay (scrim + loader + label)
                                    → handle { element, hide(), label(), visible() }
      hide(handle)                  hide a handle (or the last overlay)
      inline(target, options)       loader covering `target`; returns a handle
@@ -20,15 +20,15 @@
                                    soon as the picture has painted
      waitForImages(images, opts)   one loader until every image in the list is
                                    in (opts.box = the element it covers)
-     busy(control, options)        disables a button and puts a tiny coin in it
+     busy(control, options)        disables a button and puts a tiny loader in it
      wrap(promise, options)        shows while the promise is pending
 
    Page load / navigation — linked from <head> on every page, this file also
-   puts the coin on screen while the page itself is still loading (slow first
+   puts the loader on screen while the page itself is still loading (slow first
    paint, slow first byte after a link click, no internet connection) and takes
    it away again as soon as the DOM is ready. See bootPageLoader() below.
 
-   Options: label, glyph ('$'), delay (250 ms), minVisible (320 ms),
+   Options: label, delay (250 ms), minVisible (320 ms),
             theme ('dark' | 'light'), size ('xs' | 'sm' | 'md' | 'lg'),
             zIndex, scrim, timeout, box.
 
@@ -45,7 +45,6 @@
 
     var DEFAULTS = {
         label: 'Loading…',
-        glyph: '$',
         delay: 250,          /* only appear when the wait is longer than this   */
         minVisible: 320,     /* once visible, stay long enough not to flicker   */
         theme: 'dark',
@@ -104,12 +103,50 @@
         return Array.prototype.slice.call(value);
     }
 
-    function coinHTML(glyph, tiny) {
-        var face = escapeHTML(glyph);
+    /* The ghost <svg> needs its own clip-path / gradient / mask ids: the overlay,
+       an inline loader and the tiny button loader can all be on the page at the
+       same time, and duplicate ids would send every reference to the first one. */
+    var ghostSeq = 0;
+
+    function ghostHTML(tiny) {
+        ghostSeq += 1;
+
+        var eyes = 'scslai-loader-eyes-' + ghostSeq;
+        var grad = 'scslai-loader-grad-' + ghostSeq;
+        var mask = 'scslai-loader-mask-' + ghostSeq;
+
+        /* The mouth is drawn twice — once per layer — and the two eye circles
+           double as the clip that carves them out of the top half. */
+        var mouth =
+            '<circle class="scslai-loader__ghost-mouth1" transform="rotate(180,64,64)" r="56" cy="64" cx="64"></circle>' +
+            '<circle class="scslai-loader__ghost-mouth2" transform="rotate(0,64,64)" r="56" cy="64" cx="64"></circle>';
 
         return '<span class="scslai-loader__coin' + (tiny ? ' scslai-loader__coin--tiny' : '') + '">' +
-            '<span class="scslai-loader__face scslai-loader__face--front">' + face + '</span>' +
-            '<span class="scslai-loader__face scslai-loader__face--back">' + face + '</span>' +
+            '<svg class="scslai-loader__ghost" viewBox="0 0 128 128" aria-hidden="true" focusable="false">' +
+                '<defs>' +
+                    '<clipPath id="' + eyes + '">' +
+                        '<circle class="scslai-loader__ghost-eye1" transform="rotate(-40,64,64) translate(0,-56)" r="8" cy="64" cx="64"></circle>' +
+                        '<circle class="scslai-loader__ghost-eye2" transform="rotate(40,64,64) translate(0,-56)" r="8" cy="64" cx="64"></circle>' +
+                    '</clipPath>' +
+                    '<linearGradient id="' + grad + '" y2="1" x2="0" y1="0" x1="0">' +
+                        '<stop stop-color="#000" offset="0%"></stop>' +
+                        '<stop stop-color="#fff" offset="100%"></stop>' +
+                    '</linearGradient>' +
+                    '<mask id="' + mask + '">' +
+                        '<rect fill="url(#' + grad + ')" height="128" width="128" y="0" x="0"></rect>' +
+                    '</mask>' +
+                '</defs>' +
+                '<g stroke-dasharray="175.93 351.86" stroke-width="12" stroke-linecap="round">' +
+                    '<g>' +
+                        '<rect class="scslai-loader__ghost-front-fill" clip-path="url(#' + eyes + ')" height="64" width="128"></rect>' +
+                        '<g class="scslai-loader__ghost-front-stroke" fill="none">' + mouth + '</g>' +
+                    '</g>' +
+                    '<g mask="url(#' + mask + ')">' +
+                        '<rect class="scslai-loader__ghost-back-fill" clip-path="url(#' + eyes + ')" height="64" width="128"></rect>' +
+                        '<g class="scslai-loader__ghost-back-stroke" fill="none">' + mouth + '</g>' +
+                    '</g>' +
+                '</g>' +
+            '</svg>' +
         '</span>';
     }
 
@@ -124,7 +161,7 @@
         el.setAttribute('aria-live', 'polite');
         el.setAttribute('aria-busy', 'true');
 
-        el.innerHTML = coinHTML(options.glyph, false) +
+        el.innerHTML = ghostHTML(false) +
             '<span class="scslai-loader__label">' + escapeHTML(options.label) + '</span>';
 
         return el;
@@ -498,7 +535,7 @@
 
     /* ---------------------------------------------------------------------
        Busy control — SCSLAILoader.busy(button, options)
-       The control is disabled and shows a tiny coin + label while it works.
+       The control is disabled and shows a tiny loader + label while it works.
        --------------------------------------------------------------------- */
 
     function busy(control, options) {
@@ -515,7 +552,7 @@
         control.setAttribute('aria-busy', 'true');
         if (hadDisabled) { control.disabled = true; }
 
-        control.innerHTML = coinHTML(o.glyph, true) +
+        control.innerHTML = ghostHTML(true) +
             '<span class="scslai-loader__busy-label">' + escapeHTML(o.label) + '</span>';
 
         return {
@@ -565,17 +602,17 @@
     /* ---------------------------------------------------------------------
        PAGE-LOAD / NAVIGATION LOADER
        coin-loader.js is linked from <head> on every page, so this runs while
-       the rest of the document is still coming down the wire: the coin is on
+       the rest of the document is still coming down the wire: the loader is on
        screen during a slow first paint and during a slow first byte after a
        link is clicked. It only appears when the wait is real, and it steps
        aside as soon as the DOM is ready — the per-feature loaders (form PDF,
        album photos, yearbook pages, …) take over from there.
        --------------------------------------------------------------------- */
 
-    var BOOT_DELAY = 400;        /* ms of loading before the coin appears    */
+    var BOOT_DELAY = 400;        /* ms of loading before the loader appears  */
     var BOOT_MIN_VISIBLE = 300;  /* ms it stays once it is on screen         */
     var BOOT_LIMIT = 15000;      /* safety valve for a stalled page          */
-    var NAV_DELAY = 200;         /* link click → coin (slow first byte)      */
+    var NAV_DELAY = 200;         /* link click → loader (slow first byte)    */
     var NAV_LIMIT = 6000;        /* give up if the navigation never happens  */
     var BOOT_Z = 130000;         /* above every other layer on the site      */
 
@@ -668,7 +705,7 @@
         return true;
     }
 
-    /* Chrome/Edge report the first contentful paint. Releasing the coin there —
+    /* Chrome/Edge report the first contentful paint. Releasing the loader there —
        instead of waiting for every blocking script — is what keeps the site
        feeling quick on a phone, where DOMContentLoaded can be seconds away. */
     function onFirstPaint(callback) {
@@ -709,13 +746,13 @@
 
         pageWaitShow(BOOT_DELAY, connectionLabel(), BOOT_LIMIT);
 
-        /* The coin only has to cover the blank screen: the moment the page
+        /* The loader only has to cover the blank screen: the moment the page
            paints something it steps aside, even if scripts are still coming. */
         onFirstPaint(settle);
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function () {
-                /* One frame, so the first paint lands behind the coin. */
+                /* One frame, so the first paint lands behind the loader. */
                 window.requestAnimationFrame(function () {
                     window.setTimeout(settle, 60);
                 });
@@ -758,7 +795,7 @@
         }
     };
 
-    /* Linked from <head> on every page: the page-load coin has to be on screen
+    /* Linked from <head> on every page: the page-load loader has to be on screen
        while the rest of the document is still being parsed. Loading this file
        from the bottom of <body> instead skips the boot loader and only uses the
        API above. */
