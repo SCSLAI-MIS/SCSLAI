@@ -1,5 +1,5 @@
 /* =========================================================================
-   SCSLAI — COIN LOADER  (styles)
+   SCSLAI — LOADING ANIMATION  (styles)
    -------------------------------------------------------------------------
    One loading animation for every wait on the site:
      • building the fill-out form PDF        (FORMS/engine.js)
@@ -12,17 +12,16 @@
    Markup is built by loading/coin-loader.js:
      <div class="scslai-loader scslai-loader--overlay">
        <span class="scslai-loader__coin">
-         <span class="scslai-loader__face scslai-loader__face--front">$</span>
-         <span class="scslai-loader__face scslai-loader__face--back">$</span>
+         <svg class="scslai-loader__ghost">…</svg>
        </span>
        <span class="scslai-loader__label">Loading…</span>
      </div>
 
-   Coin animation from Uiverse.io by MiniJohan, themed for SCSLAI.
+   Ghost animation from Uiverse.io by fanishah, re-coloured green for SCSLAI.
    ========================================================================= */
 
 .scslai-loader {
-    --scslai-loader-coin: 96px;
+    --scslai-loader-size: 96px;
     --scslai-loader-ink: #f4dfae;
 
     position: absolute;
@@ -70,8 +69,8 @@
     border-radius: 12px;
 }
 
-/* Scrim switched off (SCSLAILoader.show({ scrim: false })): the coin rides on
-   top of whatever is already on screen. */
+/* Scrim switched off (SCSLAILoader.show({ scrim: false })): the loader rides
+   on top of whatever is already on screen. */
 .scslai-loader--bare {
     background: none;
     -webkit-backdrop-filter: none;
@@ -86,81 +85,157 @@
 }
 
 /* Sizes */
-.scslai-loader--xs { --scslai-loader-coin: 34px; }
-.scslai-loader--sm { --scslai-loader-coin: 58px; }
-.scslai-loader--md { --scslai-loader-coin: 96px; }
-.scslai-loader--lg { --scslai-loader-coin: 128px; }
+.scslai-loader--xs { --scslai-loader-size: 34px; }
+.scslai-loader--sm { --scslai-loader-size: 58px; }
+.scslai-loader--md { --scslai-loader-size: 96px; }
+.scslai-loader--lg { --scslai-loader-size: 128px; }
 
 /* =========================================================================
-   THE COIN
+   THE LOADER — the ghost "still working" face
+   -------------------------------------------------------------------------
+   The wrapper (.scslai-loader__coin) is only the size box; the SVG inside
+   fills it, so one set of rules covers every size (xs … lg, plus the tiny
+   one used inside a busy button).
+
+   Ghost animation from Uiverse.io by fanishah, re-coloured green for SCSLAI:
+   the original cyan/blue pair becomes the two greens below.
    ========================================================================= */
 
 .scslai-loader__coin {
     position: relative;
     display: block;
     flex: 0 0 auto;
-    width: var(--scslai-loader-coin, 96px);
-    height: var(--scslai-loader-coin, 96px);
-    border-radius: 50%;
-
-    background-color: #d4af37;                                  /* coin colour  */
-    background-image: radial-gradient(
-        circle at 50% 120%,
-        rgba(255, 255, 255, 0.5) 0%,
-        rgba(255, 255, 255, 0) 80%
-    );                                                          /* coin texture */
-
-    box-shadow:
-        inset 0 0 5px rgba(0, 0, 0, 0.3),                       /* coin shadow  */
-        inset 0 0 0 2px rgba(255, 248, 220, 0.35),
-        0 10px 26px rgba(0, 0, 0, 0.4);
-
-    transform-style: preserve-3d;
-    animation: scslaiCoinFlip 1s infinite;
+    width: var(--scslai-loader-size, 96px);
+    height: var(--scslai-loader-size, 96px);
+    line-height: 0;                 /* no inline-SVG baseline gap */
 }
 
-/* A face per side, so the engraving is never seen mirrored mid-flip. */
-.scslai-loader__face {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-
-    font-size: calc(var(--scslai-loader-coin, 96px) * 0.5);
-    font-weight: 700;
-    line-height: 1;
-
-    color: rgba(0, 0, 0, 0.5);                                  /* engraving    */
-    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);          /* engraving shadow */
-
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+.scslai-loader__ghost {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
-.scslai-loader__face--back {
-    transform: rotateY(180deg);
+/* One tint per layer. The vertical mask blends layer A (top) into layer B
+   (bottom), which is what gives the loader its shaded, solid look. */
+.scslai-loader__ghost-front-fill   { fill: hsl(135, 90%, 45%); }
+.scslai-loader__ghost-front-stroke { stroke: hsl(135, 90%, 45%); }
+.scslai-loader__ghost-back-fill    { fill: hsl(160, 90%, 38%); }
+.scslai-loader__ghost-back-stroke  { stroke: hsl(160, 90%, 38%); }
+
+/* The two eyes and the two mouths share one timing; each overrides the
+   keyframes it needs below. */
+.scslai-loader__ghost-eye1,
+.scslai-loader__ghost-eye2,
+.scslai-loader__ghost-mouth1,
+.scslai-loader__ghost-mouth2 {
+    animation: scslaiLoaderEye1 3s ease-in-out infinite;
 }
 
-@keyframes scslaiCoinFlip {
-    0% {
-        transform: rotateY(0deg);
+.scslai-loader__ghost-eye1,
+.scslai-loader__ghost-eye2 {
+    transform-origin: 64px 64px;
+}
+
+.scslai-loader__ghost-eye2 {
+    animation-name: scslaiLoaderEye2;
+}
+
+.scslai-loader__ghost-mouth1 {
+    animation-name: scslaiLoaderMouth1;
+}
+
+.scslai-loader__ghost-mouth2 {
+    animation-name: scslaiLoaderMouth2;
+    visibility: hidden;
+}
+
+@keyframes scslaiLoaderEye1 {
+    from {
+        transform: rotate(-260deg) translate(0, -56px);
     }
+
+    50%,
+    60% {
+        animation-timing-function: cubic-bezier(0.17, 0, 0.58, 1);
+        transform: rotate(-40deg) translate(0, -56px) scale(1);
+    }
+
+    to {
+        transform: rotate(225deg) translate(0, -56px) scale(0.35);
+    }
+}
+
+@keyframes scslaiLoaderEye2 {
+    from {
+        transform: rotate(-260deg) translate(0, -56px);
+    }
+
     50% {
-        transform: rotateY(180deg);
+        transform: rotate(40deg) translate(0, -56px) rotate(-40deg) scale(1);
     }
-    100% {
-        transform: rotateY(360deg);
+
+    52.5% {
+        transform: rotate(40deg) translate(0, -56px) rotate(-40deg) scale(1, 0);
+    }
+
+    55%,
+    70% {
+        animation-timing-function: cubic-bezier(0, 0, 0.28, 1);
+        transform: rotate(40deg) translate(0, -56px) rotate(-40deg) scale(1);
+    }
+
+    to {
+        transform: rotate(150deg) translate(0, -56px) scale(0.4);
     }
 }
 
-/* Tiny coin — used inside a button that is busy (SCSLAILoader.busy) */
-.scslai-loader__coin--tiny {
-    --scslai-loader-coin: 18px;
+@keyframes scslaiLoaderMouth1 {
+    from {
+        animation-timing-function: ease-in;
+        stroke-dasharray: 0 351.86;
+        stroke-dashoffset: 0;
+    }
 
-    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
-    animation-duration: 0.9s;
+    25% {
+        animation-timing-function: ease-out;
+        stroke-dasharray: 175.93 351.86;
+        stroke-dashoffset: 0;
+    }
+
+    50% {
+        animation-timing-function: steps(1, start);
+        stroke-dasharray: 175.93 351.86;
+        stroke-dashoffset: -175.93;
+        visibility: visible;
+    }
+
+    75%,
+    to {
+        visibility: hidden;
+    }
+}
+
+@keyframes scslaiLoaderMouth2 {
+    from {
+        animation-timing-function: steps(1, end);
+        visibility: hidden;
+    }
+
+    50% {
+        animation-timing-function: ease-in-out;
+        visibility: visible;
+        stroke-dashoffset: 0;
+    }
+
+    to {
+        stroke-dashoffset: -351.86;
+    }
+}
+
+/* Tiny loader — used inside a button that is busy (SCSLAILoader.busy) */
+.scslai-loader__coin--tiny {
+    --scslai-loader-size: 18px;
 }
 
 /* =========================================================================
@@ -223,11 +298,14 @@
 }
 
 /* =========================================================================
-   REDUCED MOTION — the coin stops flipping but the wait stays visible
+   REDUCED MOTION — the ghost holds still but the wait stays visible
    ========================================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-    .scslai-loader__coin {
+    .scslai-loader__ghost-eye1,
+    .scslai-loader__ghost-eye2,
+    .scslai-loader__ghost-mouth1,
+    .scslai-loader__ghost-mouth2 {
         animation: none;
     }
 
