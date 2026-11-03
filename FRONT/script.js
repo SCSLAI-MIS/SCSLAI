@@ -1552,15 +1552,15 @@ const loanMatrix = {
       { id: 'educational', label: 'Educational Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15 }, max: 200000 },
       { id: 'emergencyRata', label: 'Emergency RATA Loan', rates: { 1: 12, 2: 12 } },
       { id: 'equitable', label: 'Equitable Loan', rates: { 1: 10 } },
-      { id: 'equity', label: 'Equity Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } },
+      { id: 'equity', label: 'Equity Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15 } },
       { id: 'healthEmergency', label: 'Health Emergency Loan PR', rates: { 1: 12, 2: 12 }, max: 400000 },
       { id: 'help', label: 'Help Loan DIR', rates: { 1: 12, 2: 12, 3: 12 } },
       { id: 'housing', label: 'Housing Loan', rates: { 1: 8, 2: 8, 3: 8, 4: 8, 5: 8 }, min: 600000, max: 2000000 },
       { id: 'longTerm', label: 'Long Term Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } },
       { id: 'maxi', label: 'Maxi Loan', rates: { 1: 6, 2: 8, 3: 10, 4: 12, 5: 14 }, min: 100000, max: 550000 },
       { id: 'mealCasual', label: 'MEAL (Casual)', rates: { 1: 8, 2: 8 }, max: 50000 },
-      { id: 'meal', label: 'MEAL', rates: { 2: 8, 3: 10 }, min: 50000, max: 300000 },
-      { id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
+      { id: 'meal', label: 'MEAL', rates: { 1: 8, 2: 8, 3: 10 }, min: 50000, max: 300000 },
+      //{ id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
       { id: 'multiPurpose', label: 'Multi-Purpose Loan', rates: { 1: 12, 2: 12, 3: 15 }, max: 100000 },
       //{ id: 'motorcycle', label: 'Motorcycle Loan', rates: { 4: 18, 5: 18 } },
       { id: 'petty', label: 'Petty Loan', rates: { 1: 5 }, max: 150000 },
@@ -1575,8 +1575,8 @@ const loanMatrix = {
       //{ id: 'yearEndBonus', label: 'Year End Bonus', monthlyRate: 1 }
     //],
     occasional: [
-      { id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
-      { id: 'calamity-2 Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
+      //{ id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
+      //{ id: 'calamity-2 Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
       { id: 'inflationAssistance', label: 'Inflation Assistance Loan', rates: { 1: 5, 2: 5, 3: 5 }, min: 20000, max: 120000 }
     ]
   },
@@ -1591,11 +1591,11 @@ const loanMatrix = {
       { id: 'healthEmergency', label: 'Health Emergency Loan PR', rates: { 1: 12, 2: 12 }, max: 400000 },
       { id: 'housing', label: 'Housing Loan', rates: { 1: 8, 2: 8, 3: 8, 4: 8, 5: 8 }, min: 600000, max: 2000000 },
       { id: 'maxi', label: 'Maxi Loan', rates: { 1: 6, 2: 8, 3: 10, 4: 12, 5: 14 }, max: 500000 },
-      { id: 'meal', label: 'MEAL', rates: { 2: 8, 3: 10 }, min: 50000, max: 150000 },
+      { id: 'meal', label: 'MEAL', rates: { 1: 8, 2: 8, 3: 10 }, min: 50000, max: 150000 },
       { id: 'mealCasual', label: 'MEAL (Casual)', rates: { 1: 8, 2: 8 }, max: 40000 },
-      { id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
+      //{ id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
       { id: 'multiPurpose', label: 'Multi-Purpose Loan', rates: { 1: 12, 2: 12, 3: 15 }, max: 100000 },
-      { id: 'salary', label: 'Salary Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } }
+      { id: 'salary', label: 'Salary Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15 } }
     ],
     //special: [
     // { id: 'anniversary', label: 'Anniversary Loan', monthlyRate: 1, max: 10000 },
@@ -1606,8 +1606,8 @@ const loanMatrix = {
       //{ id: 'yearEnd', label: 'Year End', monthlyRate: 1 }
     //],
     occasional: [
-      { id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
-      { id: 'calamity2Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
+      //{ id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
+     //{ id: 'calamity2Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
       { id: 'inflationAssistance', label: 'Inflation Assistance Loan', rates: { 1: 5, 2: 5, 3: 5 }, min: 20000, max: 120000 }
     ]
   }

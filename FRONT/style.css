@@ -3903,11 +3903,11 @@ nav a:hover,
 }
 
 .calculator-field input::placeholder{
-    color:#889793;
+    color:#4e5251;
 }
 
 .calculator-field input[readonly]{
-    background:#eef4f1;
+    background:#444645;
     cursor:default;
 }
 
