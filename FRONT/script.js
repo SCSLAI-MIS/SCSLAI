@@ -1267,11 +1267,9 @@ if (slides.length > 0) {
 }
 
 const announcementImages = [
-  {src: 'images/Annoncements/calamity-loan-2.png', alt: 'Final Educational Poster'},
   {src: 'images/Annoncements/Authority-to-deduct.jpg', alt: 'Announcement 1'},
-  {src: 'images/Annoncements/TLA.jpg', alt: 'Announcement 3'},
-  {src: 'images/Annoncements/anniv.jpg', alt: 'ANNIVERSARY'},
-  {src: 'images/Annoncements/STD-PT.png', alt: 'Announcement 2'}
+  {src: 'images/Annoncements/TLA.jpg', alt: 'Announcement 2'},
+  {src: 'images/Annoncements/GA.jpg', alt: 'Announcement 3'},
 ];
 const announcementImg = document.querySelector('.announcement-posters img');
 const announcementPrev = document.querySelector('.announcement-control.prev');
@@ -1280,10 +1278,29 @@ const announcementDotsWrap = document.querySelector('.announcement-dots');
 let announcementIndex = 0;
 let announcementTimer = null;
 let announcementDots = [];
-// Preloaded Image objects — this is what makes next/prev feel instant.
-// Without this, each click fetches + decodes a 1.5–3.6 MB file on demand.
+let announcementRequest = 0;
 const announcementCache = [];
 
+function loadAnnouncementImage(index) {
+  if (announcementCache[index]) return announcementCache[index];
+  const item = announcementImages[index];
+  const image = new Image();
+  image.decoding = 'async';
+  image.src = item.src;
+  announcementCache[index] = typeof image.decode === 'function'
+    ? image.decode().then(() => image)
+    : new Promise((resolve, reject) => {
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Failed to load ' + item.src));
+      });
+  return announcementCache[index];
+}
+
+function preloadAnnouncements() {
+  announcementImages.forEach((item, index) => {
+    loadAnnouncementImage(index).catch((error) => {
+      console.error('Unable to preload announcement image:', item.src, error);
+    });
 function preloadAnnouncements() {
   // Only the poster on screen and the one after it are warmed up front.
   // Pulling all five (~9.5 MB) was the single biggest hit on a phone, and
@@ -1309,16 +1326,24 @@ function updateAnnouncementDots() {
   });
 }
 
-function showAnnouncement(index) {
+async function showAnnouncement(index, direction) {
   if (!announcementImg) return;
   const safeIndex = (index + announcementImages.length) % announcementImages.length;
   const next = announcementImages[safeIndex];
-  // Instant UI feedback — dots/index update first so clicks feel responsive
+  const request = ++announcementRequest;
+  try {
+    await loadAnnouncementImage(safeIndex);
+  } catch (error) {
+    console.error('Unable to display announcement image:', next.src, error);
+    return;
+  }
+
+  if (request !== announcementRequest) return;
   announcementIndex = safeIndex;
   updateAnnouncementDots();
-
-  announcementImg.classList.remove('slide-up');
+  announcementImg.classList.remove('slide-up', 'slide-next', 'slide-previous');
   void announcementImg.offsetWidth;
+  announcementImg.src = next.src;
   // Only touch src if it actually changed (avoids reload flash on same slide)
   if (!announcementImg.getAttribute('src') || !announcementImg.src.endsWith(next.src)) {
     announcementImg.src = next.src;
@@ -1332,19 +1357,15 @@ function showAnnouncement(index) {
     }
   }
   announcementImg.alt = next.alt;
-  announcementImg.classList.add('slide-up');
-
-  // Keep neighbours warm so rapid next/prev never waits on network
-  const warm = (announcementIndex + 1) % announcementImages.length;
-  announcementCache[warm]?.decode?.().catch(() => {});
+  announcementImg.classList.add(direction === 1 ? 'slide-next' : direction === -1 ? 'slide-previous' : 'slide-up');
 }
 
 function nextAnnouncement() {
-  showAnnouncement(announcementIndex + 1);
+  showAnnouncement(announcementIndex + 1, 1);
 }
 
 function prevAnnouncement() {
-  showAnnouncement(announcementIndex - 1);
+  showAnnouncement(announcementIndex - 1, -1);
 }
 
 function startAnnouncementAuto() {
@@ -1361,7 +1382,6 @@ function stopAnnouncementAuto() {
 
 if (announcementImg) {
   preloadAnnouncements();
-  announcementImg.classList.add('slide-up');
   if (announcementDotsWrap) {
     announcementDots = announcementImages.map((item, i) => {
       const dot = document.createElement('button');
@@ -1369,7 +1389,7 @@ if (announcementImg) {
       dot.className = 'announcement-dot' + (i === 0 ? ' active' : '');
       dot.setAttribute('aria-label', 'Show announcement ' + (i + 1) + ': ' + item.alt);
       dot.addEventListener('click', () => {
-        showAnnouncement(i);
+        showAnnouncement(i, i >= announcementIndex ? 1 : -1);
         startAnnouncementAuto();
       });
       announcementDotsWrap.appendChild(dot);
@@ -1388,6 +1408,7 @@ if (announcementImg) {
       startAnnouncementAuto();
     });
   }
+  showAnnouncement(0, 0);
   const announcementBox = announcementImg.closest('.announcement-posters');
   if (announcementBox) {
     announcementBox.addEventListener('mouseenter', stopAnnouncementAuto);
@@ -1998,15 +2019,15 @@ const loanMatrix = {
       { id: 'educational', label: 'Educational Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15 }, max: 200000 },
       { id: 'emergencyRata', label: 'Emergency RATA Loan', rates: { 1: 12, 2: 12 } },
       { id: 'equitable', label: 'Equitable Loan', rates: { 1: 10 } },
-      { id: 'equity', label: 'Equity Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } },
+      { id: 'equity', label: 'Equity Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15 } },
       { id: 'healthEmergency', label: 'Health Emergency Loan PR', rates: { 1: 12, 2: 12 }, max: 400000 },
       { id: 'help', label: 'Help Loan DIR', rates: { 1: 12, 2: 12, 3: 12 } },
       { id: 'housing', label: 'Housing Loan', rates: { 1: 8, 2: 8, 3: 8, 4: 8, 5: 8 }, min: 600000, max: 2000000 },
       { id: 'longTerm', label: 'Long Term Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } },
       { id: 'maxi', label: 'Maxi Loan', rates: { 1: 6, 2: 8, 3: 10, 4: 12, 5: 14 }, min: 100000, max: 550000 },
       { id: 'mealCasual', label: 'MEAL (Casual)', rates: { 1: 8, 2: 8 }, max: 50000 },
-      { id: 'meal', label: 'MEAL', rates: { 2: 8, 3: 10 }, min: 50000, max: 300000 },
-      { id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
+      { id: 'meal', label: 'MEAL', rates: { 1: 8, 2: 8, 3: 10 }, min: 50000, max: 300000 },
+      //{ id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
       { id: 'multiPurpose', label: 'Multi-Purpose Loan', rates: { 1: 12, 2: 12, 3: 15 }, max: 100000 },
       //{ id: 'motorcycle', label: 'Motorcycle Loan', rates: { 4: 18, 5: 18 } },
       { id: 'petty', label: 'Petty Loan', rates: { 1: 5 }, max: 150000 },
@@ -2021,8 +2042,8 @@ const loanMatrix = {
       //{ id: 'yearEndBonus', label: 'Year End Bonus', monthlyRate: 1 }
     //],
     occasional: [
-      { id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
-      { id: 'calamity-2 Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
+      //{ id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
+      //{ id: 'calamity-2 Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
       { id: 'inflationAssistance', label: 'Inflation Assistance Loan', rates: { 1: 5, 2: 5, 3: 5 }, min: 20000, max: 120000 }
     ]
   },
@@ -2037,11 +2058,11 @@ const loanMatrix = {
       { id: 'healthEmergency', label: 'Health Emergency Loan PR', rates: { 1: 12, 2: 12 }, max: 400000 },
       { id: 'housing', label: 'Housing Loan', rates: { 1: 8, 2: 8, 3: 8, 4: 8, 5: 8 }, min: 600000, max: 2000000 },
       { id: 'maxi', label: 'Maxi Loan', rates: { 1: 6, 2: 8, 3: 10, 4: 12, 5: 14 }, max: 500000 },
-      { id: 'meal', label: 'MEAL', rates: { 2: 8, 3: 10 }, min: 50000, max: 150000 },
+      { id: 'meal', label: 'MEAL', rates: { 1: 8, 2: 8, 3: 10 }, min: 50000, max: 150000 },
       { id: 'mealCasual', label: 'MEAL (Casual)', rates: { 1: 8, 2: 8 }, max: 40000 },
-      { id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
+      //{ id: 'salaryEmergency', label: 'Salary Emergency Loan', rates: { 2: 12 } },
       { id: 'multiPurpose', label: 'Multi-Purpose Loan', rates: { 1: 12, 2: 12, 3: 15 }, max: 100000 },
-      { id: 'salary', label: 'Salary Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15, 5: 15 } }
+      { id: 'salary', label: 'Salary Loan', rates: { 1: 12, 2: 12, 3: 15, 4: 15 } }
     ],
     //special: [
     // { id: 'anniversary', label: 'Anniversary Loan', monthlyRate: 1, max: 10000 },
@@ -2052,8 +2073,8 @@ const loanMatrix = {
       //{ id: 'yearEnd', label: 'Year End', monthlyRate: 1 }
     //],
     occasional: [
-      { id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
-      { id: 'calamity2Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
+      //{ id: 'calamity2', label: 'Calamity Loan II', rates: { 1: 5, 2: 5, 3: 5 }, min: 50000, max: 150000 },
+     //{ id: 'calamity2Casual', label: 'Calamity Loan II (Casual)', rates: { 1: 5, 2: 5 }, min: 50000, max: 150000 },
       { id: 'inflationAssistance', label: 'Inflation Assistance Loan', rates: { 1: 5, 2: 5, 3: 5 }, min: 20000, max: 120000 }
     ]
   }
@@ -2769,4 +2790,3 @@ if (lightbox && lightboxImg) {
       }
   });
 }
-

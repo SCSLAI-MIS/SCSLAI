@@ -3203,7 +3203,7 @@ nav a:hover,
     max-width:100%;
     height:auto;
     object-fit:contain;
-    border:1px solid #ccc;
+    border:5px solid #ccc;
     display:block;
     border-radius:6px;
     background:#fff;
@@ -3295,18 +3295,46 @@ nav a:hover,
     border-radius:8px;
 }
 
-.announcement-posters img.slide-up{
-    animation: slideUp 0.35s ease-out forwards;
+.announcement-posters img.slide-up,
+.announcement-posters img.slide-next,
+.announcement-posters img.slide-previous{
+    animation-duration:.38s;
+    animation-timing-function:ease-out;
+    animation-fill-mode:both;
 }
 
-@keyframes slideUp{
-    from{
-        opacity:0;
-        transform:translateY(30px);
-    }
-    to{
-        opacity:1;
-        transform:translateY(0);
+.announcement-posters img.slide-up{
+    animation-name:announcementFadeIn;
+}
+
+.announcement-posters img.slide-next{
+    animation-name:announcementSlideNext;
+}
+
+.announcement-posters img.slide-previous{
+    animation-name:announcementSlidePrevious;
+}
+
+@keyframes announcementFadeIn{
+    from{ opacity:0; }
+    to{ opacity:1; }
+}
+
+@keyframes announcementSlideNext{
+    from{ opacity:0; transform:translateX(22px); }
+    to{ opacity:1; transform:translateX(0); }
+}
+
+@keyframes announcementSlidePrevious{
+    from{ opacity:0; transform:translateX(-22px); }
+    to{ opacity:1; transform:translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce){
+    .announcement-posters img.slide-up,
+    .announcement-posters img.slide-next,
+    .announcement-posters img.slide-previous{
+        animation-duration:.01ms;
     }
 }
 
@@ -4148,11 +4176,11 @@ nav a:hover,
 }
 
 .calculator-field input::placeholder{
-    color:#889793;
+    color:#4e5251;
 }
 
 .calculator-field input[readonly]{
-    background:#eef4f1;
+    background:#444645;
     cursor:default;
 }
 
@@ -6606,6 +6634,7 @@ header nav .dropdown.active .dropbtn {
 
 
 
+<<<<<<< HEAD
 
 
 /* ===========================
@@ -6854,3 +6883,5 @@ header nav .dropdown.active .dropbtn {
         max-height: calc(100vh - 15rem);
     }
 }
+=======
+>>>>>>> upstream/main
