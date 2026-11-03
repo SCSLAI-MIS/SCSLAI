@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCSLAI Framework - SCSLAI</title>
     <link rel="icon" type="image/png" href="favicon.png">
+    <!-- Coin loader — page-load + every wait on the site (loading/coin-loader.js).
+         Loaded first so the coin is already up while the rest of the page is
+         still coming down the wire. -->
+    <link rel="stylesheet" href="loading/coin-loader.css?v=1">
+    <script src="loading/coin-loader.js?v=1"></script>
     <link rel="stylesheet" href="style.css?v=20260903h">
     <!-- ANNIVERSARY GAMES (temporary) — switch hunts with ONE line in
          Games/game-control.js:  const ACTIVE_GAME = "star";  (or "heart").
@@ -55,7 +60,7 @@
                             <div class="framework-row framework-row-1">
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/albert.png" alt="Albert S. Montinola">
+                                        <img src="images/framework-gal/albert.png" loading="lazy" decoding="async" alt="Albert S. Montinola">
                                     </div>
                                     <h2>Albert S. Montinola</h2>
                                     <p>President</p>
@@ -65,7 +70,7 @@
                             <div class="framework-row framework-row-2">
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/ed.png" alt="Eduardo M. Irigoyen, Jr.">
+                                        <img src="images/framework-gal/ed.png" loading="lazy" decoding="async" alt="Eduardo M. Irigoyen, Jr.">
                                     </div>
                                     <h2>Eduardo M. Irigayen, Jr.</h2>
                                     <p>Vice President</p>
@@ -75,7 +80,7 @@
                             <div class="framework-row framework-row-3">
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/bebe.png" alt="Ma. Lourdes P. Serrano">
+                                        <img src="images/framework-gal/bebe.png" loading="lazy" decoding="async" alt="Ma. Lourdes P. Serrano">
                                     </div>
                                     <h2>Ma. Lourdes P. Serrano</h2>
                                     <p>Treasurer</p>
@@ -83,7 +88,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/Anna.png" alt="Maria Anna P. Ibojos">
+                                        <img src="images/framework-gal/Anna.png" loading="lazy" decoding="async" alt="Maria Anna P. Ibojos">
                                     </div>
                                     <h2>Maria Anna P. Ibojos</h2>
                                     <p>Secretary</p>
@@ -93,7 +98,7 @@
                             <div class="framework-row framework-row-4">
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/ryan.png" alt="Ryan U. Lopez">
+                                        <img src="images/framework-gal/ryan.png" loading="lazy" decoding="async" alt="Ryan U. Lopez">
                                     </div>
                                     <h2>Ryan U. Lopez</h2>
                                     <p>Independent Trustee</p>
@@ -101,7 +106,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/valones.png" alt="Irene D. Valones">
+                                        <img src="images/framework-gal/valones.png" loading="lazy" decoding="async" alt="Irene D. Valones">
                                     </div>
                                     <h2>Irene D. Valones</h2>
                                     <p>Trustee</p>
@@ -109,7 +114,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/tito.png" alt="Cesar Tito P. Royeras">
+                                        <img src="images/framework-gal/tito.png" loading="lazy" decoding="async" alt="Cesar Tito P. Royeras">
                                     </div>
                                     <h2>Cesar Tito P. Royeras</h2>
                                     <p>Independent Trustee</p>
@@ -119,7 +124,7 @@
                             <div class="framework-row framework-row-5">
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/oday.jpg" alt="Rodaliel O. Camarce">
+                                        <img src="images/framework-gal/oday.jpg" loading="lazy" decoding="async" alt="Rodaliel O. Camarce">
                                     </div>
                                     <h2>Rodalie O. Camarce</h2>
                                     <p>General Manager</p>
@@ -129,7 +134,7 @@
                             <div class="framework-row framework-row-6">
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/liza.jpg" alt="Maria Luisa R. Villarama">
+                                        <img src="images/framework-gal/liza.jpg" loading="lazy" decoding="async" alt="Maria Luisa R. Villarama">
                                     </div>
                                     <h2>Maria Luisa R. Villarama</h2>
                                     <p>Risk Management Officer</p>
@@ -137,7 +142,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/mon.jpg" alt="Ramon P. De Castro">
+                                        <img src="images/framework-gal/mon.jpg" loading="lazy" decoding="async" alt="Ramon P. De Castro">
                                     </div>
                                     <h2>Ramon P. De Castro</h2>
                                     <p>Compliance Officer</p>
@@ -145,7 +150,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/cath.jpg" alt="Baby Cathleen J. Enriquez">
+                                        <img src="images/framework-gal/cath.jpg" loading="lazy" decoding="async" alt="Baby Cathleen J. Enriquez">
                                     </div>
                                     <h2>Baby Cathleen J. Enriquez</h2>
                                     <p>Internal Auditor</p>
@@ -155,7 +160,7 @@
                             <div class="framework-row framework-row-7">
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/nap.jpg" alt="Sir Napoleon F. Balais">
+                                        <img src="images/framework-gal/nap.jpg" loading="lazy" decoding="async" alt="Sir Napoleon F. Balais">
                                     </div>
                                     <h2>Sir Napoleon F. Balais</h2>
                                     <p>MIS Section Chief</p>
@@ -163,7 +168,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/jolina.jpg" alt="Jolina Kaye M. Mendoza">
+                                        <img src="images/framework-gal/jolina.jpg" loading="lazy" decoding="async" alt="Jolina Kaye M. Mendoza">
                                     </div>
                                     <h2>Jolina Kaye M. Mendoza</h2>
                                     <p>Accounting Section Chief</p>
@@ -171,7 +176,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/GEMWEL---FRONT.jpg" alt="GEMWEL C. ADEVINO">
+                                        <img src="images/framework-gal/GEMWEL---FRONT.jpg" loading="lazy" decoding="async" alt="GEMWEL C. ADEVINO">
                                     </div>
                                     <h2>Gemwel C. Adevino</h2>
                                     <p>Acting EDP Section Chief</p>
@@ -181,7 +186,7 @@
                             <div class="framework-row framework-row-8">
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/rosie.jpg" alt="Rosie T. Navarro">
+                                        <img src="images/framework-gal/rosie.jpg" loading="lazy" decoding="async" alt="Rosie T. Navarro">
                                     </div>
                                     <h2>Rosie T. Navarro</h2>
                                     <p>Loan Processing Section Chief</p>
@@ -189,7 +194,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/mayette.jpg" alt="Marieta M. Dimaculangan">
+                                        <img src="images/framework-gal/mayette.jpg" loading="lazy" decoding="async" alt="Marieta M. Dimaculangan">
                                     </div>
                                     <h2>Marieta M. Dimaculangan</h2>
                                     <p>Cashier Section Chief</p>
@@ -197,7 +202,7 @@
 
                                 <article class="framework-person">
                                     <div class="framework-photo">
-                                        <img src="images/framework-gal/euge.jpg" alt="Eugene G. Mole&ntilde;o">
+                                        <img src="images/framework-gal/euge.jpg" loading="lazy" decoding="async" alt="Eugene G. Mole&ntilde;o">
                                     </div>
                                     <h2>Eugene G. Mole&ntilde;o</h2>
                                     <p>Finance Section Chief</p>
@@ -212,7 +217,7 @@
         <footer>
        <div class="footer-content">
             <div class="footer-section footer-logo-section">
-                <img src="images/81stW.png" alt="SCSLAI Logo" class="footer-logo">
+                <img src="images/81stW.png" alt="SCSLAI Logo" class="footer-logo" loading="lazy" decoding="async">
             </div>
             <div class="footer-section">
                 <h4>About SCSLAI</h4>

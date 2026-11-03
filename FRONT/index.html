@@ -6,7 +6,12 @@
     <title>SCSLAI</title>
     <meta name="description" content="Visit the official website of the Supreme Court Savings and Loan Association, Inc. (SCSLAI) for membership information, loan services, forms, and announcements.">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="style.css?v=20260903h">
+    <!-- Coin loader — page-load + every wait on the site (loading/coin-loader.js).
+         Loaded first so the coin is already up while the rest of the page is
+         still coming down the wire. -->
+    <link rel="stylesheet" href="loading/coin-loader.css?v=1">
+    <script src="loading/coin-loader.js?v=1"></script>
+    <link rel="stylesheet" href="style.css?v=20261029d">
     <!-- ANNIVERSARY GAMES (temporary) — switch hunts with ONE line in
          Games/game-control.js:  const ACTIVE_GAME = "star";  (or "heart").
          Delete the whole Games/ folder after the anniversary. -->
@@ -17,7 +22,7 @@
     <!-- Welcome popup: the "A new way to connect with us" banner shown once
          before the visitor uses the site (× to close). Settings live in
          welcome-popup.js. -->
-    <link rel="stylesheet" href="welcome-popup.css?v=1">
+    <link rel="stylesheet" href="welcome-popup.css?v=2">
 </head>
 <body>
 
@@ -79,23 +84,23 @@
                     <div class="featured-banner">
                         <div class="carousel">
                             <div class="carousel-slide active">
-                                <img src="images/carousel/petty.png" alt="Featured slide 1">
+                                <img src="images/carousel/petty.png" alt="Featured slide 1" decoding="async">
                                 <div class="slide-caption">PETTY</div>
                             </div>
                             <div class="carousel-slide">
-                                <img src="images/carousel/EDU1.png" alt="Featured slide 2">
+                                <img data-src="images/carousel/EDU1.png" alt="Featured slide 2" decoding="async">
                                 <div class="slide-caption">EDUCATION</div>
                             </div>
                             <div class="carousel-slide">
-                                <img src="images/carousel/STD-LS.png" alt="Featured slide 3">
+                                <img data-src="images/carousel/STD-LS.png" alt="Featured slide 3" decoding="async">
                                 <div class="slide-caption">STD</div>
                             </div>
                             <div class="carousel-slide">
-                                <img src="images/carousel/Business Loan.png" alt="Featured slide 4">
+                                <img data-src="images/carousel/Business Loan.png" alt="Featured slide 4" decoding="async">
                                 <div class="slide-caption">BUSINESS</div>
                             </div>
                             <div class="carousel-slide">
-                                <img src="images/carousel/Housing Loan.png " alt="Featured slide 5">
+                                <img data-src="images/carousel/Housing Loan.png " alt="Featured slide 5" decoding="async">
                                 <div class="slide-caption">HOUSING</div>
                             </div>
                         </div>
@@ -103,15 +108,16 @@
                         <button class="carousel-control next" type="button">›</button>
                     </div>
 
-                    <section class="gallery-section">
-                        <div class="gallery-home">
-                            <div class="gallery-item"><img src="images/gallery/Tree planting/3T.jpg" alt="SCSLAI Cares 1"><span class="gallery-item-label">Tree Planting</span></div>
-                            <div class="gallery-item"><img src="images/gallery/silungan/2S.jpg" alt="SCSLAI Cares 2"><span class="gallery-item-label">Silungan ng Pag-asa</span></div>
-                            <div class="gallery-item"><img src="images/gallery/outreach/2.jpg" alt="SCSLAI Cares 3"><span class="gallery-item-label">Outreach Aeta Community</span></div>
-                            <div class="gallery-item"><img src="images/gallery/Tree planting/4T.jpg" alt="SCSLAI Cares 4"><span class="gallery-item-label">Rizal Environment Conservation</span></div>
-                            <div class="gallery-item"><img src="images/gallery/silungan/7S.jpg" alt="SCSLAI Cares 5"><span class="gallery-item-label">Community Outreach</span></div>
-                            <div class="gallery-item"><img src="images/gallery/outreach/24.jpg" alt="SCSLAI Cares 6"><span class="gallery-item-label">Outreach Program</span></div>
+                    <!-- EVENTS — cover cards built from eventsData in script.js -->
+                    <section class="events-section" aria-labelledby="events-title">
+                        <div class="events-head">
+                            <div>
+                                <h2 class="events-title" id="events-title">Events &amp; Activities</h2>
+                                <p class="events-subtitle">Moments that bring our members and community together.</p>
+                            </div>
+                            <button type="button" class="events-viewall" data-events-viewall hidden>View All Events &rarr;</button>
                         </div>
+                        <div class="events-grid" data-events-grid></div>
                     </section>
 
                 </section>
@@ -120,11 +126,29 @@
         </div>
     </main>
 
+    <!-- EVENT ALBUM — opened by clicking an event card. The photo list for each
+         event folder lives in events-albums.js. -->
+    <div class="photo-lightbox" id="event-album" role="dialog" aria-modal="true" aria-label="Event album" hidden>
+        <div class="photo-lightbox-backdrop" data-close-album></div>
+        <figure class="photo-lightbox-panel">
+            <button type="button" class="photo-lightbox-close" data-close-album aria-label="Close album">&times;</button>
+            <button type="button" class="photo-lightbox-nav photo-lightbox-prev" data-album-prev aria-label="Previous photo">&#8249;</button>
+            <img class="photo-lightbox-image" data-album-image src="" alt="">
+            <button type="button" class="photo-lightbox-nav photo-lightbox-next" data-album-next aria-label="Next photo">&#8250;</button>
+            <figcaption class="photo-lightbox-caption">
+                <span data-album-caption></span>
+                <span class="photo-lightbox-counter" data-album-counter></span>
+            </figcaption>
+            <!-- Thumbnail strip: one button per photo, built by script.js. -->
+            <div class="photo-lightbox-strip" data-album-strip role="group" aria-label="Album photos" hidden></div>
+        </figure>
+    </div>
+
     <!-- Footer -->
     <footer>
         <div class="footer-content">
             <div class="footer-section footer-logo-section">
-                <img src="images/81stW.png" alt="SCSLAI Logo" class="footer-logo">
+                <img src="images/81stW.png" alt="SCSLAI Logo" class="footer-logo" loading="lazy" decoding="async">
             </div>
             <div class="footer-section">
                 <h4>About SCSLAI</h4>
@@ -167,8 +191,9 @@
         </div>
     </footer>
 
-    <script src="welcome-popup.js?v=1"></script>
-    <script src="script.js?v=20260903h"></script>
+    <script src="welcome-popup.js?v=2"></script>
+    <script src="events-albums.js?v=1"></script>
+    <script src="script.js?v=20261030a"></script>
     <script src="Games/game-control.js"></script>
     <script src="Games/star-game.js"></script>
     <script src="Games/heart-game.js"></script>

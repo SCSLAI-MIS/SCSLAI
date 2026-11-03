@@ -1307,13 +1307,14 @@ nav a:hover,
 
 #flipbook .scrap-card {
     position: relative;
-    /* Landscape 3:2 print matches the photos' native aspect, so the whole
-       image fits edge to edge — no crop and no letterbox. */
-    width: 100%;
-    height: auto;
-    aspect-ratio: 3 / 2;
-    max-height: 92%;
-    margin: 0;
+    /* The card hugs the photo instead of being a fixed 3:2 box, so the WHOLE
+       image shows and the tape lands on the picture itself — no letterbox and
+       no empty card around it. */
+    width: fit-content;
+    height: fit-content;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0 auto;
     padding: 0;
     /* Borderless: the print itself is taped straight onto the page. */
     background: transparent;
@@ -1323,8 +1324,8 @@ nav a:hover,
 }
 
 #flipbook .photo-mat {
-    width: 100%;
-    height: 100%;
+    width: fit-content;
+    height: fit-content;
     padding: 0;
     background: transparent;
     border: none;
@@ -1374,11 +1375,13 @@ nav a:hover,
 }
 
 #flipbook .album-page img {
-    width: 100%;
-    height: 100%;
-    /* Show the WHOLE photo — never crop. The 3:2 card already matches the
-       photos' aspect, so contain fills it cleanly; any leftover band reads
-       as the print's white border. */
+    /* Fit the whole photo inside the page budget (set from JS as
+       --page-img-max-w / --page-img-max-h) without ever cropping. The card then
+       hugs whatever size the photo ends up at, so the tape sits on the picture. */
+    width: auto;
+    height: auto;
+    max-width: var(--page-img-max-w, 100%);
+    max-height: var(--page-img-max-h, 100%);
     object-fit: contain;
     object-position: center;
     background: #fffdf7;
@@ -1754,11 +1757,10 @@ nav a:hover,
     }
 
     #flipbook .scrap-card {
-        height: auto;
-        aspect-ratio: 3 / 2;
-        /* Short/landscape viewports: clamp the print so it never overflows
-           the page; contain still shows the whole photo inside the clamp. */
-        max-height: 76%;
+        width: fit-content;
+        height: fit-content;
+        max-width: 100%;
+        max-height: 100%;
     }
 
     #flipbook .album-page img {
@@ -3309,6 +3311,7 @@ nav a:hover,
 }
 
 /* Right Section */
+.events-section,
 .gallery-section,
 .right-section{
     display:flex;
@@ -3449,6 +3452,276 @@ nav a:hover,
     padding:clamp(16px, 2.4vw, 20px);
     background:rgba(69, 137, 112, 0.734);
     border-radius:12px;
+}
+
+/* Home Events & Activities — cover cards built by script.js from eventsData:
+   the event's COVER.png shown whole, with the name + date overlaid at the
+   bottom. Section colours follow the design reference (deep green panel). */
+.events-section{
+    width:100%;
+    margin-top:20px;
+    padding:clamp(16px, 2.4vw, 22px);
+    border-radius:12px;
+    background:linear-gradient(150deg, #07553f 0%, #03322a 100%);
+}
+
+.events-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.events-title{
+    margin:0 0 4px;
+    color:#ffffff;
+    font-size:clamp(19px, 2.3vw, 25px);
+    line-height:1.15;
+}
+
+.events-subtitle{
+    margin:0;
+    color:rgba(255, 255, 255, 0.7);
+    font-size:clamp(12px, 1.5vw, 13.5px);
+    line-height:1.45;
+}
+
+.events-viewall{
+    flex:0 0 auto;
+    margin-top:2px;
+    padding:7px 15px;
+    border:none;
+    border-radius:999px;
+    background:#78fdc6;
+    color:#04352a;
+    font:inherit;
+    font-size:clamp(11px, 1.4vw, 12.5px);
+    font-weight:700;
+    letter-spacing:.02em;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:background .25s ease, transform .15s ease;
+}
+
+.events-viewall:hover{
+    background:#ffffff;
+    transform:translateY(-1px);
+}
+
+.events-viewall[hidden]{
+    display:none;
+}
+
+.events-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:clamp(10px, 1.4vw, 14px);
+    width:100%;
+    margin-top:clamp(12px, 1.6vw, 16px);
+}
+
+/* ---------- Event theme palette ----------
+   Shared by the event cards and by the album lightbox, so a theme's colours are
+   written once. Pick the theme by name in eventsData (theme: '...'); copy a
+   block below to add another. */
+.event-card,
+.photo-lightbox[data-theme]{
+    --event-accent:#78fdc6;
+    --event-accent-soft:rgba(120, 253, 198, 0.45);
+    --event-scrim:rgba(0, 0, 0, 0.5);
+    --event-scrim-strong:rgba(0, 0, 0, 0.85);
+    --event-backdrop:rgba(10, 8, 5, 0.82);
+}
+
+/* Fairy Tale Halloween — pumpkin orange + violet night. */
+.event-card[data-theme="halloween"],
+.photo-lightbox[data-theme="halloween"]{
+    --event-accent:#ff9d3c;
+    --event-accent-soft:rgba(255, 157, 60, 0.5);
+    --event-scrim:rgba(58, 16, 74, 0.5);
+    --event-scrim-strong:rgba(24, 6, 32, 0.88);
+    --event-backdrop:rgba(26, 8, 34, 0.88);
+}
+
+/* Poster Making Contest — the forest greens of its poster. */
+.event-card[data-theme="nature"],
+.photo-lightbox[data-theme="nature"]{
+    --event-accent:#7ee2a8;
+    --event-accent-soft:rgba(126, 226, 168, 0.5);
+    --event-scrim:rgba(8, 48, 36, 0.5);
+    --event-scrim-strong:rgba(3, 26, 20, 0.88);
+    --event-backdrop:rgba(4, 22, 17, 0.88);
+}
+
+/* Event card — the theme above drives its border, corner ticks, badge and scrim. */
+.event-card{
+    position:relative;
+    overflow:hidden;
+    border:2px solid var(--event-accent);
+    border-radius:12px;
+    background:rgba(255, 255, 255, 0.06);
+    box-shadow:0 6px 16px rgba(0, 0, 0, 0.28);
+    transition:box-shadow .3s ease;
+}
+
+.event-card:hover{
+    box-shadow:0 10px 24px rgba(0, 0, 0, 0.34), 0 0 0 3px var(--event-accent-soft);
+}
+
+/* Corner ticks: two short strokes at the top-left and bottom-right corners,
+   painted with gradients so they need no extra markup. */
+.event-card::before{
+    content:"";
+    position:absolute;
+    inset:7px;
+    z-index:3;
+    pointer-events:none;
+    background:
+        linear-gradient(var(--event-accent), var(--event-accent)) left top / 16px 2px no-repeat,
+        linear-gradient(var(--event-accent), var(--event-accent)) left top / 2px 16px no-repeat,
+        linear-gradient(var(--event-accent), var(--event-accent)) right bottom / 16px 2px no-repeat,
+        linear-gradient(var(--event-accent), var(--event-accent)) right bottom / 2px 16px no-repeat;
+    opacity:.9;
+}
+
+/* Themed icon badge in the corner. */
+.event-card-badge{
+    position:absolute;
+    top:9px;
+    left:9px;
+    z-index:4;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:30px;
+    height:30px;
+    border:1px solid var(--event-accent);
+    border-radius:50%;
+    background:rgba(4, 20, 15, 0.72);
+    color:var(--event-accent);
+    font-size:14px;
+    line-height:1;
+    pointer-events:none;
+    box-shadow:0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Cards with an album are clickable (script.js adds role="button"). */
+.event-card[role="button"]{
+    cursor:pointer;
+}
+
+.event-card[role="button"]:focus-visible{
+    outline:2px solid #78fdc6;
+    outline-offset:3px;
+}
+
+/* ---------- Themed album frame ----------
+   The album lightbox picks up the event's theme (script.js sets data-theme when
+   a card is opened), so the frame, the photo, the arrows and the counter all
+   carry that event's colour. The yearbook lightbox has no data-theme and keeps
+   the plain styling above. */
+.photo-lightbox[data-theme] .photo-lightbox-backdrop{
+    background:var(--event-backdrop);
+}
+
+.photo-lightbox[data-theme] .photo-lightbox-panel{
+    border:2px solid var(--event-accent);
+    box-shadow:0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 3px var(--event-accent-soft);
+}
+
+/* The same corner ticks the event cards use. */
+.photo-lightbox[data-theme] .photo-lightbox-panel::before{
+    content:"";
+    position:absolute;
+    inset:7px;
+    z-index:2;
+    pointer-events:none;
+    background:
+        linear-gradient(var(--event-accent), var(--event-accent)) left top / 16px 2px no-repeat,
+        linear-gradient(var(--event-accent), var(--event-accent)) left top / 2px 16px no-repeat,
+        linear-gradient(var(--event-accent), var(--event-accent)) right bottom / 16px 2px no-repeat,
+        linear-gradient(var(--event-accent), var(--event-accent)) right bottom / 2px 16px no-repeat;
+    opacity:.9;
+}
+
+/* The photo gets a matching frame too. */
+.photo-lightbox[data-theme] .photo-lightbox-image{
+    border:2px solid var(--event-accent);
+    box-shadow:0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.photo-lightbox[data-theme] .photo-lightbox-nav,
+.photo-lightbox[data-theme] .photo-lightbox-close{
+    border:1px solid var(--event-accent);
+    background:rgba(4, 20, 15, 0.72);
+    color:var(--event-accent);
+}
+
+.photo-lightbox[data-theme] .photo-lightbox-nav:hover,
+.photo-lightbox[data-theme] .photo-lightbox-close:hover{
+    background:var(--event-accent);
+    color:#08221a;
+}
+
+.photo-lightbox[data-theme] .photo-lightbox-caption{
+    color:#ffffff;
+}
+
+.photo-lightbox[data-theme] .photo-lightbox-counter{
+    color:var(--event-accent);
+    font-weight:700;
+}
+
+/* The cover art is a designed poster, so it is shown whole inside the frame
+   instead of being cropped like a photo. */
+.event-card-media{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    aspect-ratio:1 / 1;
+    padding:8px;
+    overflow:hidden;
+}
+
+.event-card-media img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+    transition:transform .35s ease;
+}
+
+.event-card:hover .event-card-media img{
+    transform:scale(1.03);
+}
+
+/* Name + date sit on the cover, over a themed scrim so white text always reads. */
+.event-card-overlay{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    padding:clamp(24px, 4.5vw, 38px) 12px 11px;
+    background:linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, var(--event-scrim) 55%, var(--event-scrim-strong) 100%);
+    pointer-events:none;
+}
+
+.event-card-title{
+    margin:0 0 2px;
+    color:#ffffff;
+    font-size:clamp(13px, 1.6vw, 15px);
+    line-height:1.25;
+    text-shadow:0 1px 6px rgba(0, 0, 0, 0.55);
+}
+
+.event-card-date{
+    margin:0;
+    color:rgba(255, 255, 255, 0.8);
+    font-size:clamp(10.5px, 1.3vw, 12px);
+    letter-spacing:.02em;
+    text-shadow:0 1px 6px rgba(0, 0, 0, 0.55);
 }
 
 
@@ -4543,6 +4816,7 @@ footer{
     .annual-page-section,
     .membership-page,
     .gallery-section,
+    .events-section,
     .announcements,
     .yearbook-library-section,
     .overlay{
@@ -4601,11 +4875,19 @@ footer{
         grid-template-columns:repeat(2, minmax(0, 1fr));
     }
 
+    .events-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
     .footer-content{ gap:20px; }
 }
 
 @media (max-width: 700px){
     .gallery-home{
+        grid-template-columns:1fr;
+    }
+
+    .events-grid{
         grid-template-columns:1fr;
     }
 
@@ -4616,6 +4898,7 @@ footer{
     .annual-page-section,
     .membership-page,
     .gallery-section,
+    .events-section,
     .announcements {
         margin:0 0 16px;
         padding-bottom:20px;
@@ -6049,6 +6332,12 @@ header nav .dropdown.active .dropbtn {
         inset -3px -3px 7px rgba(255, 255, 255, 0.6);
 }
 
+/* Calculator input boxes use a neutral gray fill. */
+.calculator-field input,
+.calculator-field input[readonly] {
+    background: #d4d4d4;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .calculator-close,
     .calculator-tab,
@@ -6318,3 +6607,250 @@ header nav .dropdown.active .dropbtn {
 
 
 
+
+/* ===========================
+   Photo lightbox — used by the yearbook reader (scslaicares.html) and by
+   the home-page event albums. Moved here from scslaicares.css so both pages
+   share one implementation.
+=========================== */
+.photo-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    isolation: isolate;
+}
+
+.photo-lightbox[hidden] {
+    display: none !important;
+}
+
+.photo-lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(10, 8, 5, 0.82);
+    backdrop-filter: blur(2px);
+}
+
+.photo-lightbox-panel {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    width: min(100%, 980px);
+    max-height: calc(100vh - 2rem);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.6rem 0.6rem;
+    padding: 0.9rem;
+    border-radius: 16px;
+    background: rgba(24, 18, 12, 0.96);
+    border: 1px solid rgba(248, 232, 201, 0.22);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.photo-lightbox-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 2;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(248, 232, 201, 0.14);
+    color: #f8e8c9;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.photo-lightbox-close:hover {
+    background: rgba(248, 232, 201, 0.28);
+}
+
+.photo-lightbox-image {
+    grid-column: 2;
+    grid-row: 1;
+    display: block;
+    width: 100%;
+    max-height: calc(100vh - 9rem);
+    object-fit: contain;
+    border-radius: 10px;
+    background: #111;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.photo-lightbox-nav {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(248, 232, 201, 0.14);
+    color: #f8e8c9;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-lightbox-nav:hover {
+    background: rgba(248, 232, 201, 0.28);
+}
+
+.photo-lightbox-prev {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.photo-lightbox-next {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.photo-lightbox-caption {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 0;
+    color: #f8e8c9;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.photo-lightbox-counter {
+    flex: 0 0 auto;
+    color: rgba(248, 232, 201, 0.75);
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* ---------- Album thumbnail strip ----------
+   One thumbnail per photo; the strip scrolls sideways and the active photo is
+   highlighted. Only the event album builds a strip, so the yearbook photo
+   viewer is unaffected. */
+.photo-lightbox-strip {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0.35rem 0.1rem 0.15rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+}
+
+.photo-lightbox-strip[hidden] {
+    display: none;
+}
+
+.photo-lightbox-thumb {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 54px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: #111;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0.62;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.photo-lightbox-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-lightbox-thumb:hover {
+    opacity: 1;
+}
+
+.photo-lightbox-thumb.is-active {
+    opacity: 1;
+    border-color: var(--event-accent, #f8e8c9);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+/* With a strip on screen the photo gives up a little height so both fit. */
+.photo-lightbox.has-strip .photo-lightbox-image {
+    max-height: calc(100vh - 13rem);
+}
+
+@media (max-width: 560px) {
+    .photo-lightbox {
+        padding: 0.5rem;
+    }
+
+    .photo-lightbox-panel {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    /* Phone layout: the photo spans the full width and the prev/next buttons
+       drop to their own row underneath it, so nothing steals horizontal space
+       from the image and the whole picture shows at the largest size the screen
+       allows. */
+    .photo-lightbox-image {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        max-height: calc(100vh - 9rem);
+    }
+
+    .photo-lightbox-prev {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .photo-lightbox-next {
+        grid-column: 3;
+        grid-row: 2;
+    }
+
+    .photo-lightbox-caption {
+        grid-column: 2;
+        grid-row: 2;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem;
+        text-align: center;
+    }
+
+    .photo-lightbox-nav {
+        width: 38px;
+        height: 38px;
+    }
+
+    .photo-lightbox-strip {
+        gap: 0.3rem;
+        padding: 0.3rem 0.1rem 0.1rem;
+    }
+
+    .photo-lightbox-thumb {
+        width: 60px;
+        height: 45px;
+    }
+
+    .photo-lightbox.has-strip .photo-lightbox-image {
+        max-height: calc(100vh - 15rem);
+    }
+}

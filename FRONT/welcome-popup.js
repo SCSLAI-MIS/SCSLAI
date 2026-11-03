@@ -44,7 +44,9 @@
            'local'   = once per browser, ever
            'none'    = every time the home page is opened */
         remember: 'session',
-        delay: 350      /* ms after the banner picture is ready to show */
+        delay: 350,     /* ms after the banner picture is ready to show */
+        loaderDelay: 250 /* ms of waiting for that picture before the card opens
+                            with the coin loader in it (see loading/coin-loader.js) */
     };
 
     var STORAGE_KEY = 'scslai-welcome-dismissed';
@@ -64,7 +66,9 @@
 
     var modal = null;
     var picture = null;
+    var card = null;
     var closeButton = null;
+    var bannerLoader = null;
     var lastFocus = null;
     var scrollLock = null;
     var closing = false;
@@ -148,6 +152,7 @@
             '</div>';
 
         picture = modal.querySelector('picture');
+        card = modal.querySelector('.scslai-welcome__card');
         closeButton = modal.querySelector('.scslai-welcome__close');
 
         closeButton.addEventListener('click', function () { close(true); });
@@ -162,6 +167,35 @@
         var el = event.target;
         if (!el || !el.closest) { return; }
         if (el.closest('[data-scslai-welcome-close]')) { close(true); }
+    }
+
+    /* ------------------------------------------------------------------
+       Coin loader for the banner download
+       ------------------------------------------------------------------ */
+
+    /* The card is opened early with the coin loader inside it, so a slow
+       banner is a visible wait instead of nothing at all. The picture fades in
+       as the loader goes (see .scslai-welcome--loading in welcome-popup.css). */
+    function startBannerLoader() {
+        if (!modal) { return null; }
+
+        modal.classList.add('scslai-welcome--loading');
+
+        if (!window.SCSLAILoader) { return null; }
+
+        return window.SCSLAILoader.inline(card || modal, {
+            label: 'Loading\u2026',
+            delay: 0            /* the wait already happened — show it now */
+        });
+    }
+
+    function stopBannerLoader() {
+        if (bannerLoader) {
+            bannerLoader.hide();
+            bannerLoader = null;
+        }
+
+        if (modal) { modal.classList.remove('scslai-welcome--loading'); }
     }
 
     /* ------------------------------------------------------------------
@@ -319,8 +353,31 @@
            away; the popup is revealed once the picture is ready. */
         document.body.appendChild(modal);
 
+        /* A big banner on a slow connection would otherwise leave the visitor
+           staring at the site with no sign that anything is coming: open the
+           card with the coin loader in it after `loaderDelay`, then swap in the
+           artwork the moment it lands. */
+        var loaderTimer = window.setTimeout(function () {
+            loaderTimer = 0;
+            bannerLoader = startBannerLoader();
+            show();
+        }, CONFIG.loaderDelay);
+
         whenPictureReady(function (ready) {
-            if (!ready) { return; }
+            if (loaderTimer) {
+                window.clearTimeout(loaderTimer);
+                loaderTimer = 0;
+            }
+
+            if (!ready) {
+                /* A missing picture is no reason to block the site — and if the
+                   card is already on screen, take it away again. */
+                stopBannerLoader();
+                if (shown) { close(false); }
+                return;
+            }
+
+            stopBannerLoader();
             setTimeout(show, CONFIG.delay);
         });
     }
