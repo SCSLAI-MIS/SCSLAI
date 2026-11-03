@@ -108,6 +108,15 @@ body.scslai-welcome-open {
     user-select: none;
     -webkit-user-drag: none;
     -webkit-touch-callout: none;
+    transition: opacity 240ms ease;
+}
+
+/* The banner is a large picture: while it downloads the card opens with the
+   coin loader inside it (loading/coin-loader.css) and the artwork waits behind
+   it, fading in as the loader goes. See startBannerLoader() in
+   welcome-popup.js. */
+.scslai-welcome--loading .scslai-welcome__image {
+    opacity: 0;
 }
 
 /* -------------------------------------------------------------------------
@@ -208,7 +217,8 @@ body.scslai-welcome-open {
 
 @media (prefers-reduced-motion: reduce) {
     .scslai-welcome,
-    .scslai-welcome__card {
+    .scslai-welcome__card,
+    .scslai-welcome__image {
         transition: none;
     }
 

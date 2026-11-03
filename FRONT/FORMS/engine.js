@@ -2439,6 +2439,37 @@
 
             modalBody.scrollTop = 0;
 
+
+            /* =================================================
+               FORM ARTWORK
+               Each page is a full-page PNG (some of them
+               several MB), so on a cold cache the dialog sits
+               blank for a moment. Hold the coin loader over the
+               dialog until every page image has painted.
+               ================================================= */
+
+            if (
+                window.SCSLAILoader &&
+                window.SCSLAILoader.waitForImages
+            ) {
+
+                window.SCSLAILoader.waitForImages(
+
+                    modalBody.querySelectorAll(
+                        ".loan-form-background"
+                    ),
+
+                    {
+                        box: modal,
+                        label:
+                            "Loading the form\u2026",
+                        delay: 180
+                    }
+
+                );
+
+            }
+
         }
 
 
@@ -3500,12 +3531,79 @@
 
             download.addEventListener(
                 "click",
-                function() {
+                function () {
 
-                    generatePDF(
-                        currentValues,
-                        currentSelections
-                    );
+                    /* The PDF is built from a live snapshot of the preview, so
+                       the click can sit there for a few seconds. Show the coin
+                       loader for the whole wait: the button turns busy at once,
+                       and the full-screen overlay only appears if the build
+                       really takes a moment. */
+
+                    var loader =
+                        window.SCSLAILoader;
+
+                    var busy =
+                        loader && loader.busy
+                            ? loader.busy(
+                                download,
+                                { label: "Preparing\u2026" }
+                            )
+                            : null;
+
+                    var overlay =
+                        loader && loader.show
+                            ? loader.show(
+                                {
+                                    label:
+                                        "Building your form PDF\u2026"
+                                }
+                            )
+                            : null;
+
+
+                    function finish() {
+
+                        if (overlay) {
+
+                            overlay.hide();
+
+                        }
+
+
+                        if (busy) {
+
+                            busy.hide();
+
+                        }
+
+                    }
+
+
+                    var job =
+                        generatePDF(
+                            currentValues,
+                            currentSelections
+                        );
+
+
+                    if (
+                        job &&
+                        typeof job.then ===
+                        "function"
+                    ) {
+
+                        job.then(
+                            finish,
+                            finish
+                        );
+
+                    }
+
+                    else {
+
+                        finish();
+
+                    }
 
                 }
             );

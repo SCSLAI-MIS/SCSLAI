@@ -1,0 +1,237 @@
+/* =========================================================================
+   SCSLAI — COIN LOADER  (styles)
+   -------------------------------------------------------------------------
+   One loading animation for every wait on the site:
+     • building the fill-out form PDF        (FORMS/engine.js)
+     • loading the fill-out form artwork     (FORMS/engine.js)
+     • opening a SCSLAICares yearbook        (script.js)
+     • swapping an announcement photo        (script.js)
+     • opening an event album photo          (script.js)
+     • downloading the welcome-popup banner  (welcome-popup.js)
+
+   Markup is built by loading/coin-loader.js:
+     <div class="scslai-loader scslai-loader--overlay">
+       <span class="scslai-loader__coin">
+         <span class="scslai-loader__face scslai-loader__face--front">$</span>
+         <span class="scslai-loader__face scslai-loader__face--back">$</span>
+       </span>
+       <span class="scslai-loader__label">Loading…</span>
+     </div>
+
+   Coin animation from Uiverse.io by MiniJohan, themed for SCSLAI.
+   ========================================================================= */
+
+.scslai-loader {
+    --scslai-loader-coin: 96px;
+    --scslai-loader-ink: #f4dfae;
+
+    position: absolute;
+    inset: 0;
+    z-index: 1;                 /* stays under close buttons / arrows (z-index 2) */
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+
+    box-sizing: border-box;
+    padding: 18px;
+    border-radius: inherit;
+
+    background: rgba(6, 24, 16, 0.62);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;       /* never eat a click while the page settles */
+    transition: opacity 200ms ease, visibility 0s linear 200ms;
+}
+
+.scslai-loader.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 200ms ease, visibility 0s linear 0s;
+}
+
+/* Full-screen variant — SCSLAILoader.show() */
+.scslai-loader--overlay {
+    position: fixed;
+    z-index: var(--scslai-loader-z, 120000);
+    pointer-events: auto;       /* the page is busy: hold the clicks */
+}
+
+/* Loader that had to fall back to a fixed box because its host is static —
+   see inline() in coin-loader.js. */
+.scslai-loader--floating {
+    position: fixed;
+    inset: auto;
+    border-radius: 12px;
+}
+
+/* Scrim switched off (SCSLAILoader.show({ scrim: false })): the coin rides on
+   top of whatever is already on screen. */
+.scslai-loader--bare {
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+/* Variant for light panels (the white form preview) */
+.scslai-loader--light {
+    --scslai-loader-ink: #10362a;
+
+    background: rgba(244, 246, 245, 0.8);
+}
+
+/* Sizes */
+.scslai-loader--xs { --scslai-loader-coin: 34px; }
+.scslai-loader--sm { --scslai-loader-coin: 58px; }
+.scslai-loader--md { --scslai-loader-coin: 96px; }
+.scslai-loader--lg { --scslai-loader-coin: 128px; }
+
+/* =========================================================================
+   THE COIN
+   ========================================================================= */
+
+.scslai-loader__coin {
+    position: relative;
+    display: block;
+    flex: 0 0 auto;
+    width: var(--scslai-loader-coin, 96px);
+    height: var(--scslai-loader-coin, 96px);
+    border-radius: 50%;
+
+    background-color: #d4af37;                                  /* coin colour  */
+    background-image: radial-gradient(
+        circle at 50% 120%,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0) 80%
+    );                                                          /* coin texture */
+
+    box-shadow:
+        inset 0 0 5px rgba(0, 0, 0, 0.3),                       /* coin shadow  */
+        inset 0 0 0 2px rgba(255, 248, 220, 0.35),
+        0 10px 26px rgba(0, 0, 0, 0.4);
+
+    transform-style: preserve-3d;
+    animation: scslaiCoinFlip 1s infinite;
+}
+
+/* A face per side, so the engraving is never seen mirrored mid-flip. */
+.scslai-loader__face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+
+    font-size: calc(var(--scslai-loader-coin, 96px) * 0.5);
+    font-weight: 700;
+    line-height: 1;
+
+    color: rgba(0, 0, 0, 0.5);                                  /* engraving    */
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);          /* engraving shadow */
+
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.scslai-loader__face--back {
+    transform: rotateY(180deg);
+}
+
+@keyframes scslaiCoinFlip {
+    0% {
+        transform: rotateY(0deg);
+    }
+    50% {
+        transform: rotateY(180deg);
+    }
+    100% {
+        transform: rotateY(360deg);
+    }
+}
+
+/* Tiny coin — used inside a button that is busy (SCSLAILoader.busy) */
+.scslai-loader__coin--tiny {
+    --scslai-loader-coin: 18px;
+
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
+    animation-duration: 0.9s;
+}
+
+/* =========================================================================
+   LABEL
+   ========================================================================= */
+
+.scslai-loader__label {
+    max-width: 32ch;
+    color: var(--scslai-loader-ink, #f4dfae);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    text-align: center;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+
+.scslai-loader__label:empty {
+    display: none;
+}
+
+/* =========================================================================
+   BUSY CONTROL — SCSLAILoader.busy(button)
+   ========================================================================= */
+
+.scslai-loader-busy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: progress;
+}
+
+.scslai-loader-busy[disabled] {
+    opacity: 0.85;
+    cursor: progress;
+}
+
+.scslai-loader__busy-label {
+    font: inherit;
+    letter-spacing: inherit;
+}
+
+/* -------------------------------------------------------------------------
+   PAGE-LOAD LOADER — shown while the page itself is still coming down the
+   wire (bootPageLoader() in coin-loader.js). The page behind it is only half
+   painted, so this one is opaque instead of a scrim over it.
+   ------------------------------------------------------------------------- */
+
+.scslai-loader--boot {
+    --scslai-loader-ink: #f4dfae;
+
+    background: #04150f;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+.scslai-loader--boot .scslai-loader__label {
+    font-size: 16px;
+}
+
+/* =========================================================================
+   REDUCED MOTION — the coin stops flipping but the wait stays visible
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .scslai-loader__coin {
+        animation: none;
+    }
+
+    .scslai-loader {
+        transition: none;
+    }
+}

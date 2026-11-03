@@ -251,6 +251,10 @@ const CARD_EXIT_MS = 560;
 
 let bookOpeningAnimation = null;
 
+/* Coin loader for the part of the yearbook preload the book-opening animation
+   does not cover (see openReaderAfterBookOpening). */
+let bookOpeningCoinWait = null;
+
 function getBookOpeningAnimation() {
   if (!bookOpeningStage || !window.BookAnimation) return null;
 
@@ -541,15 +545,19 @@ function getFlipSize() {
   }
 
   // Fit the spread to the room the panel actually gives it, so the book fills
-  // the space beside it instead of sitting in a fixed-size box.
+  // the space beside it instead of sitting in a fixed-size box. Laptop-class
+  // viewports are short, so the spread is scaled down a touch there: the book
+  // then sits comfortably inside the panel with the caption and pagination on
+  // screen at once instead of spilling past the fold.
   const maxWidth = 1500;
+  const compactScale = visibleHeight <= 1000 ? 0.8 : 1;
   let availableWidth = Math.min(maxWidth, Math.floor(window.innerWidth * 0.92));
   const measuredStage = document.querySelector('.reader-stage');
   if (measuredStage && yearbookReader && !yearbookReader.hidden) {
     const measured = measuredStage.clientWidth - 12;
     if (measured > 300) availableWidth = Math.min(maxWidth, measured);
   }
-  const spreadWidth = Math.max(600, Math.floor(availableWidth * tiltFit));
+  const spreadWidth = Math.max(600, Math.floor(availableWidth * tiltFit * compactScale));
   // Cap by the truly visible height so short/landscape viewports still fit.
   const desiredHeight = Math.max(420, Math.floor(spreadWidth * 0.43));
   const heightCap = Math.max(300, visibleHeight - 160);
@@ -880,7 +888,18 @@ async function openReader(index, startPage) {
   const edition = yearbookData[index];
   if (!edition || !yearbookReader) return;
 
-  await preloadBasePages();
+  // Every page of every edition is a large scan, so an open can wait a while
+  // after the book-opening animation has finished. The coin loader covers that
+  // wait, and its delay means a cached open never flashes anything.
+  const preloadLoader = window.SCSLAILoader
+    ? window.SCSLAILoader.show({ label: 'Opening the yearbook…' })
+    : null;
+
+  try {
+    await preloadBasePages();
+  } finally {
+    preloadLoader?.hide();
+  }
 
   activeYearbookIndex = index;
   readerBadge.textContent = `SCSLAI CARES ${edition.year}`;
@@ -935,6 +954,11 @@ function cancelBookOpening() {
   bookOpeningSequence += 1;
   isBookOpening = false;
   bookOpeningAnimation?.stop();
+
+  if (bookOpeningCoinWait) {
+    bookOpeningCoinWait.hide();
+    bookOpeningCoinWait = null;
+  }
   bookOpening?.classList.remove('is-playing');
   if (bookOpening) {
     bookOpening.hidden = true;
@@ -984,10 +1008,30 @@ async function openReaderAfterBookOpening(index, startPage) {
   void bookOpening.offsetWidth;
   bookOpening.classList.add('is-playing');
 
-  await Promise.all([
-    preloadBasePages(),
-    runBookOpeningSequence(index)
-  ]);
+  /* The book-opening animation is the loading animation for this wait. Pages
+     are big scans though, so if they are still coming in once the book has
+     opened (a cold cache on a slow connection), the coin loader takes over for
+     the rest of it instead of leaving a frozen book on screen. Its delay means
+     the hand-over is invisible when the pages are already there. */
+  const pagesReady = preloadBasePages();
+  const bookOpeningPlay = runBookOpeningSequence(index);
+
+  bookOpeningPlay.then(() => {
+    if (sequence !== bookOpeningSequence) { return; }
+
+    bookOpeningCoinWait = window.SCSLAILoader
+      ? window.SCSLAILoader.show({ label: `Opening ${edition.title}\u2026` })
+      : null;
+  });
+
+  try {
+    await Promise.all([pagesReady, bookOpeningPlay]);
+  } finally {
+    if (bookOpeningCoinWait) {
+      bookOpeningCoinWait.hide();
+      bookOpeningCoinWait = null;
+    }
+  }
 
   if (sequence !== bookOpeningSequence) return;
 
@@ -1008,6 +1052,24 @@ function closeReader() {
   document.body.style.overflow = '';
 }
 
+// The photo is fitted by CSS (max-width/height), but the card has to hug the
+// photo and a percentage can't resolve against an auto-height box — so the
+// page's usable box is handed to CSS as an explicit pixel budget. Re-run
+// whenever the flipbook is (re)sized.
+function applyPageImageBudget() {
+  if (!flipbookElement) return;
+  const layout = flipbookElement.querySelector('.print-layout');
+  if (!layout) return;
+  // Leave a little room so the tape (which overhangs the card) and the small
+  // page tilt never reach the page's clipping edge.
+  const w = Math.round(layout.clientWidth) - 6;
+  const h = Math.round(layout.clientHeight) - 18;
+  if (w > 40 && h > 40) {
+    flipbookElement.style.setProperty('--page-img-max-w', w + 'px');
+    flipbookElement.style.setProperty('--page-img-max-h', h + 'px');
+  }
+}
+
 function resizeActiveFlipbook() {
   if (yearbookReader?.hidden) return;
   if (!flipbookElement) return;
@@ -1024,6 +1086,7 @@ function resizeActiveFlipbook() {
   const size = getFlipSize();
   flipbookElement.style.width = `${size.width}px`;
   flipbookElement.style.height = `${size.height}px`;
+  applyPageImageBudget();
 }
 
 function turnNext() {
@@ -1156,9 +1219,27 @@ let slideInterval;
 
 function showSlide(index) {
   slides.forEach((slide, i) => {
-    slide.classList.toggle('active', i === index);
+    const isActive = i === index;
+    slide.classList.toggle('active', isActive);
+    if (isActive) { loadSlideArtwork(slide); }
   });
   currentIndex = index;
+}
+
+// Slides 2–5 keep their picture in data-src, so the home page does not pull
+// ~7 MB of posters it may never show. The coin loader covers the wait the first
+// time a slide is opened (see loading/coin-loader.js).
+function loadSlideArtwork(slide) {
+  const img = slide.querySelector('img[data-src]');
+  if (!img) return;
+
+  const src = img.getAttribute('data-src');
+  img.removeAttribute('data-src');
+  img.src = src;
+
+  if (window.SCSLAILoader) {
+    window.SCSLAILoader.image(img, { label: 'Loading…', delay: 200 });
+  }
 }
 
 function nextSlide() {
@@ -1220,6 +1301,22 @@ function preloadAnnouncements() {
     loadAnnouncementImage(index).catch((error) => {
       console.error('Unable to preload announcement image:', item.src, error);
     });
+function preloadAnnouncements() {
+  // Only the poster on screen and the one after it are warmed up front.
+  // Pulling all five (~9.5 MB) was the single biggest hit on a phone, and
+  // showAnnouncement() already warms the neighbour as the visitor browses.
+  [0, 1].forEach((i) => {
+    const item = announcementImages[i];
+    if (!item || announcementCache[i]) return;
+
+    const img = new Image();
+    img.decoding = 'async';
+    // decode() warms the bitmap so the swap doesn't jank on first view
+    img.src = item.src;
+    if (typeof img.decode === 'function') {
+      img.decode().catch(() => {});
+    }
+    announcementCache[i] = img;
   });
 }
 
@@ -1247,6 +1344,18 @@ async function showAnnouncement(index, direction) {
   announcementImg.classList.remove('slide-up', 'slide-next', 'slide-previous');
   void announcementImg.offsetWidth;
   announcementImg.src = next.src;
+  // Only touch src if it actually changed (avoids reload flash on same slide)
+  if (!announcementImg.getAttribute('src') || !announcementImg.src.endsWith(next.src)) {
+    announcementImg.src = next.src;
+    // These posters are 1.5–3.6 MB, so a slide that is not decoded yet would
+    // show a blank frame: hold the coin loader over it until it has painted.
+    if (window.SCSLAILoader) {
+      window.SCSLAILoader.image(announcementImg, {
+        label: 'Loading announcement…',
+        delay: 180
+      });
+    }
+  }
   announcementImg.alt = next.alt;
   announcementImg.classList.add(direction === 1 ? 'slide-next' : direction === -1 ? 'slide-previous' : 'slide-up');
 }
@@ -1368,6 +1477,364 @@ document.addEventListener('keydown', (event) => {
     hideGalleryOverlay();
   }
 });
+
+// ===========================
+// Home page: events
+// ===========================
+// One card per SCSLAI event. Each event keeps its own folder beside the site
+// files (FRONT/<Event>/) holding COVER.png — the card image — plus the event's
+// photos. To add an event: drop a new folder in and push another object below.
+// The first EVENTS_PREVIEW cards show by default and "View All Events" reveals
+// the rest; the button hides itself when every event already fits.
+//
+// `theme` picks the card's decorated border + colours and `icon` the Font
+// Awesome badge in its corner (both optional — each theme sets its own accent
+// colour in the .event-card rules in style.css).
+const eventsData = [
+  {
+    title: 'Fairy Tale Halloween',
+    date: 'October 28, 2026',
+    description: 'A fairy tale-themed Halloween celebration for SCSLAI members and guests.',
+    cover: 'Halloween/COVER.png',
+    alt: 'Fairy Tale Halloween @ SCSLAI poster',
+    theme: 'halloween',
+    icon: 'fa-hat-wizard'
+  },
+  {
+    title: 'SCSLAI Poster Making Contest',
+    date: 'October 30, 2024',
+    description: 'An SCSLAI poster-making contest; registration ran September 24 – October 4, 2024.',
+    cover: 'Poster Making/COVER.png',
+    alt: 'SCSLAI Poster Making Contest poster',
+    theme: 'nature',
+    icon: 'fa-palette'
+  }
+];
+
+const EVENTS_PREVIEW = 3;
+
+const eventsGrid = document.querySelector('[data-events-grid]');
+const eventsViewAll = document.querySelector('[data-events-viewall]');
+let eventsExpanded = false;
+
+function buildEventCard(event) {
+  const card = document.createElement('article');
+  card.className = 'event-card';
+  // The theme drives the card's decorated border and colours (see style.css).
+  card.dataset.theme = event.theme || 'default';
+  // The one-line blurb has no room on the card, so it rides along as the
+  // hover tooltip (and stays available for a future event detail view).
+  card.title = event.description || event.title || '';
+
+  const media = document.createElement('div');
+  media.className = 'event-card-media';
+
+  const image = document.createElement('img');
+  image.src = resolveAssetUrl(event.cover);
+  image.alt = event.alt || event.title || 'SCSLAI event';
+  image.loading = 'lazy';
+  image.decoding = 'async';
+  media.appendChild(image);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'event-card-overlay';
+
+  if (event.title) {
+    const title = document.createElement('h3');
+    title.className = 'event-card-title';
+    title.textContent = event.title;
+    overlay.appendChild(title);
+  }
+
+  if (event.date) {
+    const date = document.createElement('p');
+    date.className = 'event-card-date';
+    date.textContent = event.date;
+    overlay.appendChild(date);
+  }
+
+  media.appendChild(overlay);
+  card.appendChild(media);
+
+  // Small themed badge in the corner (decorative only — never steals the click).
+  if (event.icon) {
+    const badge = document.createElement('span');
+    badge.className = 'event-card-badge';
+    badge.setAttribute('aria-hidden', 'true');
+    const glyph = document.createElement('i');
+    glyph.className = 'fas ' + event.icon;
+    badge.appendChild(glyph);
+    card.appendChild(badge);
+  }
+
+  // A card only becomes clickable when its album actually has photos.
+  if (getEventAlbumPhotos(event).length) {
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    card.setAttribute('aria-label', 'View photos from ' + (event.title || 'this event'));
+    card.addEventListener('click', () => openEventAlbum(event));
+    card.addEventListener('keydown', (keyboardEvent) => {
+      if (keyboardEvent.key === 'Enter' || keyboardEvent.key === ' ') {
+        keyboardEvent.preventDefault();
+        openEventAlbum(event);
+      }
+    });
+  }
+
+  return card;
+}
+
+function renderEvents() {
+  if (!eventsGrid) return;
+  const visible = eventsExpanded ? eventsData : eventsData.slice(0, EVENTS_PREVIEW);
+  eventsGrid.replaceChildren(...visible.map(buildEventCard));
+  if (eventsViewAll) eventsViewAll.hidden = eventsExpanded || eventsData.length <= EVENTS_PREVIEW;
+}
+
+renderEvents();
+
+eventsViewAll?.addEventListener('click', () => {
+  eventsExpanded = true;
+  renderEvents();
+});
+
+// ---------- Event album popup ----------
+// Clicking a card pages through that event's photos, with a thumbnail strip, a
+// counter and prev/next — the photo list per folder comes from events-albums.js.
+// The reader and the strip load the small copies built by
+// generate-event-images.js (display/ and thumbs/) and fall back to the original
+// when a copy is missing.
+const eventAlbum = document.getElementById('event-album');
+const eventAlbumImage = eventAlbum?.querySelector('[data-album-image]') || null;
+const eventAlbumCaption = eventAlbum?.querySelector('[data-album-caption]') || null;
+const eventAlbumCounter = eventAlbum?.querySelector('[data-album-counter]') || null;
+const eventAlbumStrip = eventAlbum?.querySelector('[data-album-strip]') || null;
+
+let eventAlbumPhotos = [];
+let eventAlbumIndex = 0;
+let eventAlbumOpen = false;
+let eventAlbumLastFocus = null;
+let eventAlbumTitle = '';
+let eventAlbumFolder = '';
+
+// Remember where the visitor left off, so an accidental reload comes back to the
+// same photo. sessionStorage (not localStorage) on purpose: it survives a reload
+// in the same tab but does not reopen the album on a later visit.
+const EVENT_ALBUM_STATE_KEY = 'scslai-event-album';
+
+function saveEventAlbumState() {
+  if (!eventAlbumFolder) return;
+  try {
+    sessionStorage.setItem(EVENT_ALBUM_STATE_KEY, JSON.stringify({ folder: eventAlbumFolder, index: eventAlbumIndex }));
+  } catch (err) { /* storage can be blocked; the album still works */ }
+}
+
+function readEventAlbumState() {
+  try {
+    const raw = sessionStorage.getItem(EVENT_ALBUM_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) { return null; }
+}
+
+function clearEventAlbumState() {
+  try { sessionStorage.removeItem(EVENT_ALBUM_STATE_KEY); } catch (err) { /* ignore */ }
+}
+
+// The album manifest is keyed by folder name, which is the first segment of the
+// event's cover path (FRONT/<Event>/COVER.png).
+function getEventAlbumFolder(event) {
+  return String(event.cover || '').split('/')[0];
+}
+
+// Each entry carries the web-sized copy (display/), the strip thumbnail
+// (thumbs/) and the untouched original to fall back on.
+function getEventAlbumPhotos(event) {
+  const folder = getEventAlbumFolder(event);
+  const albums = window.SCSLAI_EVENT_ALBUMS || {};
+  return (albums[folder] || []).map((name) => {
+    const base = name.replace(/\.[^.]+$/, '');
+    return {
+      name,
+      original: resolveAssetUrl(folder + '/' + name),
+      full: resolveAssetUrl(folder + '/display/' + base + '.jpg'),
+      thumb: resolveAssetUrl(folder + '/thumbs/' + base + '.jpg')
+    };
+  });
+}
+
+function buildEventAlbumStrip() {
+  if (!eventAlbumStrip) return;
+  eventAlbumStrip.replaceChildren(...eventAlbumPhotos.map((photo, index) => {
+    const thumb = document.createElement('button');
+    thumb.type = 'button';
+    thumb.className = 'photo-lightbox-thumb';
+    thumb.dataset.albumThumb = String(index);
+    thumb.setAttribute('aria-label', 'Show photo ' + (index + 1) + ' of ' + eventAlbumPhotos.length);
+    const img = document.createElement('img');
+    img.src = photo.thumb;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    // A photo added without re-running generate-event-images.js has no thumb.
+    img.addEventListener('error', () => { img.src = photo.original; }, { once: true });
+    thumb.appendChild(img);
+    return thumb;
+  }));
+  eventAlbumStrip.hidden = false;
+  eventAlbum.classList.add('has-strip');
+}
+
+function updateEventAlbumStrip() {
+  if (!eventAlbumStrip) return;
+  const thumbs = eventAlbumStrip.querySelectorAll('[data-album-thumb]');
+  thumbs.forEach((thumb, index) => {
+    const active = index === eventAlbumIndex;
+    thumb.classList.toggle('is-active', active);
+    thumb.setAttribute('aria-current', active ? 'true' : 'false');
+  });
+  const active = thumbs[eventAlbumIndex];
+  if (active && typeof active.scrollIntoView === 'function') {
+    active.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+}
+
+function renderEventAlbum() {
+  if (!eventAlbumImage || !eventAlbumPhotos.length) return;
+  const total = eventAlbumPhotos.length;
+  const photo = eventAlbumPhotos[eventAlbumIndex];
+
+  // Fall back to the untouched original if the optimized copy is missing.
+  eventAlbumImage.dataset.original = photo.original;
+  eventAlbumImage.dataset.usedFallback = '';
+  eventAlbumImage.src = photo.full;
+
+  // Photos are large, so the frame would sit empty while one loads: the coin
+  // loader fills that wait.
+  if (window.SCSLAILoader) {
+    window.SCSLAILoader.image(eventAlbumImage, {
+      box: eventAlbum?.querySelector('.photo-lightbox-panel') || eventAlbumImage.parentElement,
+      label: 'Loading photo…',
+      delay: 160
+    });
+  }
+  eventAlbumImage.alt = eventAlbumTitle + ' — photo ' + (eventAlbumIndex + 1) + ' of ' + total;
+  if (eventAlbumCaption) eventAlbumCaption.textContent = eventAlbumTitle;
+  if (eventAlbumCounter) eventAlbumCounter.textContent = (eventAlbumIndex + 1) + ' / ' + total;
+
+  updateEventAlbumStrip();
+
+  // Warm the next photo so paging feels instant.
+  const next = eventAlbumPhotos[(eventAlbumIndex + 1) % total];
+  if (next) {
+    const upcoming = new Image();
+    upcoming.src = next.full;
+  }
+
+  saveEventAlbumState();
+}
+
+// One-shot fallback for the big photo (see renderEventAlbum).
+eventAlbumImage?.addEventListener('error', () => {
+  const original = eventAlbumImage.dataset.original;
+  if (original && eventAlbumImage.dataset.usedFallback !== '1') {
+    eventAlbumImage.dataset.usedFallback = '1';
+    eventAlbumImage.src = original;
+  }
+});
+
+function openEventAlbum(event, startIndex) {
+  const photos = getEventAlbumPhotos(event);
+  if (!eventAlbum || !photos.length) return;
+  // The album frame borrows the event's theme colours (see style.css).
+  eventAlbum.dataset.theme = event.theme || 'default';
+  eventAlbumPhotos = photos;
+  eventAlbumFolder = getEventAlbumFolder(event);
+  eventAlbumIndex = Math.max(0, Math.min(photos.length - 1, startIndex || 0));
+  eventAlbumTitle = event.title || 'Event';
+  eventAlbumLastFocus = document.activeElement;
+  eventAlbum.hidden = false;
+  eventAlbumOpen = true;
+  document.body.style.overflow = 'hidden';
+  buildEventAlbumStrip();
+  renderEventAlbum();
+  eventAlbum.querySelector('.photo-lightbox-close')?.focus();
+}
+
+function closeEventAlbum() {
+  if (!eventAlbum || !eventAlbumOpen) return;
+  eventAlbum.hidden = true;
+  eventAlbumOpen = false;
+  eventAlbum.classList.remove('has-strip');
+  if (eventAlbumStrip) {
+    eventAlbumStrip.hidden = true;
+    eventAlbumStrip.replaceChildren();
+  }
+  document.body.style.overflow = '';
+  clearEventAlbumState();
+  if (eventAlbumLastFocus && typeof eventAlbumLastFocus.focus === 'function') {
+    eventAlbumLastFocus.focus();
+  }
+}
+
+function stepEventAlbum(delta) {
+  if (!eventAlbumOpen || !eventAlbumPhotos.length) return;
+  eventAlbumIndex = (eventAlbumIndex + delta + eventAlbumPhotos.length) % eventAlbumPhotos.length;
+  renderEventAlbum();
+}
+
+eventAlbum?.querySelectorAll('[data-close-album]').forEach((el) => {
+  el.addEventListener('click', closeEventAlbum);
+});
+eventAlbum?.querySelector('[data-album-prev]')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  stepEventAlbum(-1);
+});
+eventAlbum?.querySelector('[data-album-next]')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  stepEventAlbum(1);
+});
+eventAlbumStrip?.addEventListener('click', (e) => {
+  const thumb = e.target.closest('[data-album-thumb]');
+  if (!thumb) return;
+  e.stopPropagation();
+  const index = Number(thumb.dataset.albumThumb);
+  if (Number.isFinite(index)) {
+    eventAlbumIndex = index;
+    renderEventAlbum();
+  }
+});
+
+// If the page is reloaded while the album is open, come back to the same photo.
+(function restoreEventAlbum() {
+  const state = readEventAlbumState();
+  if (!state || !state.folder) return;
+  const event = eventsData.find((item) => getEventAlbumFolder(item) === state.folder);
+  if (event) openEventAlbum(event, state.index);
+})();
+
+// Capture phase on purpose: the welcome popup and the Facebook-live modal also
+// listen for Escape on document (capture: true) and call stopPropagation(), so a
+// bubble-phase listener here would never see the key while either is open.
+document.addEventListener('keydown', (event) => {
+  if (!eventAlbumOpen) return;
+  if (event.key === 'Escape') {
+    event.stopPropagation();
+    closeEventAlbum();
+  } else if (event.key === 'ArrowLeft') {
+    stepEventAlbum(-1);
+  } else if (event.key === 'ArrowRight') {
+    stepEventAlbum(1);
+  }
+}, true);
+
+// A folder with no manifest entry would silently open nothing — say so once.
+if (eventsGrid && !eventsData.every((event) => getEventAlbumPhotos(event).length)) {
+  const missing = eventsData
+    .filter((event) => !getEventAlbumPhotos(event).length)
+    .map(getEventAlbumFolder);
+  console.warn('[events] no album photos listed for:', missing.join(', '),
+    '— add the folder/photos and run "node generate-event-albums.js".');
+}
 
 nextButton?.addEventListener('click', () => {
   nextSlide();

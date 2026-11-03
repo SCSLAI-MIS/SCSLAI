@@ -17,4 +17,5 @@ package.json
 package-lock.json
 qa-forms.js
 qa-covers.js
+qa-loader.js
 qa-results-forms/
