@@ -6362,8 +6362,8 @@ header nav .dropdown.active .dropbtn {
 
 /* Calculator input boxes use a neutral gray fill. */
 .calculator-field input,
-.calculator-field input[readonly] {
-    background: #d4d4d4;
+.calculator-field select    {
+    background-color: #d7d9d9;
 }
 
 @media (prefers-reduced-motion: reduce) {
