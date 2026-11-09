@@ -206,18 +206,23 @@ body, * {
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
 }
 
-/* Cloth colours keep the three editions distinguishable on the shelf. */
-.yearbook-book[data-yearbook-index="0"] .yearbook-cover {
+/* Cloth colours keep the editions distinguishable on the shelf. */
+.yearbook-book[data-yearbook-index="0"] .yearbook-cover { /* 2026 - Kanlungan ni Maria */
+    --cover-cloth-1: #1f4b57;
+    --cover-cloth-2: #0a2029;
+}
+
+.yearbook-book[data-yearbook-index="1"] .yearbook-cover { /* 2025 - Aeta Outreach */
     --cover-cloth-1: #1e3050;
     --cover-cloth-2: #0a1322;
 }
 
-.yearbook-book[data-yearbook-index="1"] .yearbook-cover {
+.yearbook-book[data-yearbook-index="2"] .yearbook-cover { /* 2024 - Tree Planting */
     --cover-cloth-1: #25492f;
     --cover-cloth-2: #0f2116;
 }
 
-.yearbook-book[data-yearbook-index="2"] .yearbook-cover {
+.yearbook-book[data-yearbook-index="3"] .yearbook-cover { /* 2022 - Silungan ng Pag-asa */
     --cover-cloth-1: #59242e;
     --cover-cloth-2: #290f15;
 }
