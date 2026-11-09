@@ -18,7 +18,7 @@ Games/
 `Games/game-control.js` holds exactly one line:
 
 ```js
-const ACTIVE_GAME = "heart";   // current setting — Game 2 is live
+const ACTIVE_GAME = "star";   // current setting — Game 2 is live
 ```
 
 | `ACTIVE_GAME` | What players see |
@@ -158,6 +158,46 @@ Check it end to end with `node qa-game-refresh.js "<path to chrome.exe>"` — it
 the site with the hunt off, flips the switch the way the admin would, and asserts
 that the open page reloads itself, paints the star, settles, and never interrupts a
 visitor who has the Calculator open.
+
+## Testing it yourself
+
+### Watch it happen locally (~1 minute)
+
+```bash
+node dev-serve.js                 # serves FRONT/ at http://localhost:5500
+```
+
+1. Open <http://localhost:5500/index.html?welcome=0&starreset=1&gamewatchdebug=1>
+   (`starreset=1` wipes this browser's hunt progress; `gamewatchdebug=1` prints the
+   watcher's decisions to the DevTools console).
+2. Open DevTools → Console. It should already show
+   `[game-watch] watching http://localhost:5500/Games/game-control.js | this page runs: heart`.
+3. In another window edit `FRONT/Games/game-control.js` to
+   `const ACTIVE_GAME = "STAR";` and save. **Do not touch the browser.**
+4. Within ~20 s the console prints `Game Controls changed: heart -> star`, then
+   `reloading`; the page reloads itself and the 🌟 appears.
+
+`dev-serve.js` is a plain static server on purpose — a Live-Server-style
+auto-reloader would reload the page on save, and the test would prove nothing. It
+also serves `/Games/` with `no-store`, exactly like `vercel.json` does on the live
+site, so local and production behave the same.
+
+### The automated version
+
+```bash
+node qa-game-refresh.js "C:\Program Files\Google\Chrome\Application\chrome.exe"
+```
+
+It boots the page with the hunt off, flips the switch the way the admin would, and
+asserts that the open page reloads itself, paints the star, settles with no reload
+loop, and never interrupts a visitor who has the Calculator open. Expect
+`QA-GAME-REFRESH RESULT: PASS (12/12)`.
+
+### On the live site
+
+1. Deploy, then open <https://www.scslai.net/?gamewatchdebug=1> and open DevTools.
+2. Edit `FRONT/Games/game-control.js` on GitHub and commit — Vercel redeploys.
+3. The open tab reloads itself within ~20 s and shows the new hunt.
 
 ## Why hearts never show up early
 
