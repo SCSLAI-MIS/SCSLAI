@@ -67,7 +67,8 @@ there immediately without scrolling the tall form.
    const ACTIVE_GAME = "heart";   // Game 2 — hearts only
    ```
 
-3. Save and hard-refresh the site (`Ctrl+F5` / `Cmd+Shift+R`).
+3. Save, commit and push — Vercel redeploys the site automatically — then
+   reload the page.
 
 Nothing else to comment, uncomment or delete. If `game-control.js` is missing,
 or the value is anything other than exactly `"star"` or `"heart"`, **both**
@@ -86,9 +87,77 @@ at the top of `star-game.js` / `heart-game.js`.
 - **About pages** (`about-history`, `about-core-values`, `about-annual-report`,
   `about-data-protection-policy`): `heart-game.css`, `heart-game.js`,
   `game-control.js` — for the calculator heart only.
+- Every page above also loads `game-watch.js` **last** — that is what reloads an
+  open page when the Game Controls change (see *Auto-refresh* below).
 - `reports/2023` and `reports/2024` are left out on purpose: their CALCULATOR
   link points to `../calculator.html`, which `script.js` does not intercept,
   so the calculator cannot be opened there.
+
+## Caching — why the switch lands without a hard refresh
+
+Vercel serves the whole site with `Cache-Control: public, max-age=0,
+must-revalidate` plus an `ETag`. A switch value sitting in a plain `.js` file used
+to stay in the browser / CDN cache under a URL that never changed, so visitors kept
+running the old `ACTIVE_GAME` until the cache expired. Two things prevent that now:
+
+1. **`FRONT/vercel.json`** sends `Cache-Control: no-store` for `/Games/(.*)`, so the
+   game files are never stored by the browser or the Vercel edge, and
+   `no-cache, max-age=0, must-revalidate` for the HTML, so a page is always
+   revalidated before it is reused.
+2. **Every page loads the games with a version token**, matching the convention used
+   by `style.css?v=…` / `script.js?v=…`:
+
+   ```html
+   <link rel="stylesheet" href="Games/star-game.css?v=20261109a">
+   <link rel="stylesheet" href="Games/heart-game.css?v=20261109a">
+   ...
+   <script src="Games/game-control.js?v=20261109a"></script>
+   <script src="Games/star-game.js?v=20261109a"></script>
+   <script src="Games/heart-game.js?v=20261109a"></script>
+   ```
+
+Because of (1) you normally do **not** have to bump the token when you flip
+`ACTIVE_GAME` — the file is fetched fresh on the next page load. Bumping `?v=` on all
+13 pages (e.g. to `20261110a`) is still the belt-and-braces option, since a new URL
+can never be a cache hit.
+
+> An already-open tab keeps running the script it loaded — no header can change
+> that. Reloading (or reopening the tab) picks up the new hunt.
+
+## Auto-refresh — open pages pick the switch up by themselves
+
+`Games/game-watch.js` — loaded last on every page that loads the games — is what
+makes a deploy visible without asking anybody to reload:
+
+1. It re-reads `Games/game-control.js` every **20 s** (with `no-store` plus a
+   one-off query string, so the answer is always the deployment that is live
+   *right now*).
+2. The moment that value differs from the value the page booted with, it calls
+   `location.reload()`.
+3. The reload paints the new hunt. The next check now agrees with the page, so
+   nothing further happens — there is no reload loop.
+
+It deliberately stands down while the visitor is busy: a text field has focus, or
+the Calculator popup, the loan form or the “you found a hidden star!” card is open.
+Those visitors get the reload on the first poll after they finish, instead of losing
+what they were typing. A background tab costs nothing — checks are skipped while the
+tab is hidden and run again the moment it comes back.
+
+Tune it at the top of `Games/game-watch.js`:
+
+| Constant | Default | Meaning |
+| --- | --- | --- |
+| `POLL_MS` | `20000` | how often an open page re-checks the Game Controls |
+| `MAX_RELOADS` / `WINDOW_MS` | `5` / 3 min | ceiling on automatic reloads per tab |
+| `DEBUG` | `false` | `true` logs every check to the console |
+
+So the whole admin flow is: set `ACTIVE_GAME`, push → Vercel deploys → every open
+page reloads itself within about 20 seconds.
+
+Check it end to end with `node qa-game-refresh.js "<path to chrome.exe>"` — it boots
+the site with the hunt off, flips the switch the way the admin would, and asserts
+that the open page reloads itself, paints the star, settles, and never interrupts a
+visitor who has the Calculator open.
 
 ## Why hearts never show up early
 
@@ -142,9 +211,12 @@ another profile, another device or another port each start fresh.
 
 1. Delete the whole `Games/` folder.
 2. Remove the blocks marked “ANNIVERSARY GAMES (temporary)” from the 13 pages
-   (that includes `Games/game-control.js`).
-3. Optional tidy-up: delete the leftover heart markup
+   (that includes `Games/game-control.js`) — delete the whole `<link …>` /
+   `<script …>` lines, `?v=` token included.
+3. Delete `FRONT/vercel.json`, or keep it and drop only its `"/Games/(.*)"` rule
+   (the HTML `no-cache` rules are useful on their own).
+4. Optional tidy-up: delete the leftover heart markup
    (`<span class="heart-game-heart" ...>` — invisible without the game files).
-4. Nothing in `style.css` or `script.js` belongs to the games — the site is
+5. Nothing in `style.css` or `script.js` belongs to the games — the site is
    unchanged once the folder is gone.
 
