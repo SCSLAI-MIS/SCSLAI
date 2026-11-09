@@ -8,6 +8,18 @@
 html{
     scroll-behavior:smooth;
     scroll-padding-top:96px;
+
+    /* Solid colour for the page canvas.
+       The page background is made of gradients + a photo (see body below), and
+       a browser only paints the *colour* of the canvas in the overscroll
+       (rubber-band) strip you pull open at the very top / very bottom of the
+       scroll — background images and gradients are never drawn there. With no
+       colour anywhere that strip fell back to the browser's white default,
+       which is the white band that showed above the header and below the
+       footer. Keeping it the site's dark green makes that strip look like part
+       of the page. Value matches the header/footer chrome (rgba(18,80,60,·)
+       over the faded background photo). */
+    background-color:#0d4936;
 }
 
 body{
@@ -16,6 +28,10 @@ body{
     overflow-x:hidden;
     overflow-y:auto;
 
+    /* Base colour of the layered background underneath the gradients + photo:
+       it is what shows if the photo ever fails to load, and it is the colour
+       the browser repeats into the overscroll strip. */
+    background-color:#0d4936;
     background-image: 
         radial-gradient(circle at 15% 15%, rgba(243, 222, 180, 0), transparent 24%),
         radial-gradient(circle at 85% 0%, rgba(255, 244, 214, 0.089), transparent 30%),
