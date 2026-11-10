@@ -249,6 +249,11 @@ const pages2026 = [
   'images/gallery/Kanlungan ni Maria/IMG_6614.JPG',
   'images/gallery/Kanlungan ni Maria/IMG_6615.JPG',
   'images/gallery/Kanlungan ni Maria/IMG_6617 (1).JPG',
+  'images/gallery/Kanlungan ni Maria/IMG_1.jpg',
+  'images/gallery/Kanlungan ni Maria/IMG_2.jpg',
+  'images/gallery/Kanlungan ni Maria/IMG_3.jpg',
+  'images/gallery/Kanlungan ni Maria/IMG_4.jpg',
+  'images/gallery/Kanlungan ni Maria/IMG_5.JPG'
 ];
 
 
