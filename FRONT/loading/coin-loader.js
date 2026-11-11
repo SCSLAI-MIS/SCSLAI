@@ -38,6 +38,42 @@
    Styles: loading/coin-loader.css
    ========================================================================= */
 
+/* -------------------------------------------------------------------------
+   CLEAN URLS — keep ".html" out of the address bar.
+
+   vercel.json sets "cleanUrls": true, so the live site answers /download.html
+   with a 308 redirect to /download and the bar never shows the extension.
+   A static preview server (VS Code Live Server, any plain file server) cannot
+   do that, so the same effect is applied in the browser here: the address bar
+   is rewritten to the clean URL as soon as the page loads.
+
+   This file is linked from <head> on every page, before anything is painted,
+   which is why the step lives here.
+
+   It does nothing when the URL is already clean, and it gives up quietly on
+   file:// pages (where the history entry may not be rewritten) — the bar then
+   simply keeps the ".html" as it always did. Relative links are unaffected:
+   "/download.html" and "/download" resolve to the same folder.
+   ------------------------------------------------------------------------- */
+(function hideHtmlExtension() {
+    'use strict';
+
+    try {
+        var path = window.location.pathname || '';
+        var clean = path.replace(/\/index\.html?$/i, '/');   /* /index.html -> / */
+        if (clean === path) { clean = path.replace(/\.html?$/i, ''); }
+        if (clean === path || !clean) { return; }            /* already clean */
+
+        window.history.replaceState(
+            null,
+            '',
+            clean + window.location.search + window.location.hash
+        );
+    } catch (error) {
+        /* file:// or an older browser — leave the address bar alone. */
+    }
+})();
+
 (function () {
     'use strict';
 

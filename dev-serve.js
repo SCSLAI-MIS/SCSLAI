@@ -1,7 +1,4 @@
-// dev-serve.js — a plain static server for FRONT/, so you can watch the Star Hunt
-// appear on a page that is already open.
-// Usage: node dev-serve.js [port]        ->  http://localhost:5500/
-//
+
 // Deliberately NOT a Live-Server-style auto-reloader. If anything else reloaded
 // the page when you saved a file, the test would prove nothing about
 // Games/game-watch.js. Nothing here reloads a page — only the site's own watcher
