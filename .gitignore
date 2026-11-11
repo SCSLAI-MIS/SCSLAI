@@ -11,6 +11,7 @@ FRONT/FORMS/generated/*.pdf
 probe-mp4.js
 chrome-profile/
 qa-results/
+qa-results-site/
 placeholder-x.txt
 node_modules/
 package.json

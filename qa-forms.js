@@ -26,7 +26,7 @@ const SAMPLE = {
   fullName: 'JUAN REYES DELA CRUZ',
   employedAs: 'Justice Attorney I',
   officeOf: 'Office of the Court Administrator',
-  signDay: '1', signMonth: 'September', signYear: '26', signPlace: 'Manila',
+  signDay: '1', signMonth: 'September', signYear: '26', signTime: '10:30 AM', signPlace: 'Manila',
   signatureOverName: 'JUAN R. DELA CRUZ',
   email: 'juan.delacruz@example.com',
   mobileNumber: '09171234567',
@@ -88,7 +88,21 @@ async function testForm(browser, key, label) {
   console.log(`[${label}] payload form key:`, payload && payload.form, '| has fields:', !!(payload && payload.fields && payload.fields.fullName), '| civilStatus:', payload && payload.civilStatus);
   if (!payload || payload.form !== key) throw new Error(`${label}: submit payload missing/wrong`);
   if (payload.civilStatus !== 'Single') throw new Error(`${label}: civilStatus checkbox not captured`);
-  if (!payload || payload.form !== key) throw new Error(`${label}: submit payload missing/wrong`);
+
+  // The PDF is delivered by the "Print / Download" button in the preview the
+  // submit opens; click it (via JS, so a loader overlay cannot swallow it) so
+  // the download really lands in qa-results-forms/.
+  await page
+    .waitForFunction(() => !!document.getElementById('downloadLoanPDF'), { timeout: 30000 })
+    .catch(() => {});
+  const clickedDownload = await page.evaluate(() => {
+    const button = document.getElementById('downloadLoanPDF');
+    if (!button) return false;
+    button.click();
+    return true;
+  });
+  console.log(`[${label}] download button clicked:`, clickedDownload);
+  await new Promise((r) => setTimeout(r, 3000));
 
   await page.close();
   return { filled, modalInfo, errors };
