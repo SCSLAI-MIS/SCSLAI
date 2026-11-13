@@ -4,4 +4,4 @@
 //   "star"  -> the Star hunt
 //   "heart" -> the Heart hunt
 // Anything else — empty "", "stars", "hearts" — turns BOTH hunts off.
-const ACTIVE_GAME = "star";
+const ACTIVE_GAME = "";
