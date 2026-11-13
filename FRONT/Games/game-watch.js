@@ -31,7 +31,9 @@
 
    TUNABLES (inside the IIFE below)
      POLL_MS  how often an open page re-checks the Game Controls.
-     DEBUG    true to log every check to the console.
+     DEBUG    true to log every check to the console. You can also turn the
+              logging on for one visit without editing anything by adding
+              ?gamewatchdebug=1 to the URL.
 
    PUT IT ON EVERY PAGE THAT LOADS THE GAMES, AFTER Games/game-control.js:
      <script src="Games/game-watch.js?v=20261109a"></script>
@@ -45,7 +47,8 @@
   var MAX_RELOADS = 5;              // per tab, per window
   var WINDOW_MS = 3 * 60 * 1000;    // the window MAX_RELOADS is counted over
   var STORE_KEY = 'scslai_game_watch';
-  var DEBUG = false;
+  // Logging is off in production; ?gamewatchdebug=1 turns it on for one visit.
+  var DEBUG = /[?&]gamewatchdebug=1(&|$)/.test(window.location.search);
 
   // "The visitor is in the middle of something" — reload later, not now.
   var BUSY_SELECTORS = [

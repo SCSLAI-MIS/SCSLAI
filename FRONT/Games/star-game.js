@@ -14,11 +14,13 @@
   var STORE_KEY = 'scslai_easter_egg_found_v2';
   var END_KEY = 'scslai_easter_egg_done';
   var EGGS = [
-    { id: 'contact-card', match: /contact\.html?$/i, container: '.contact-card', mode: 'contact-card', tint: 'egg-tint-2' },
-    { id: 'membership', match: /membership\.html?$/i, container: '.footer-bottom p', mode: 'append-inline', tint: 'egg-tint-3' },
-    { id: 'framework', match: /about-framework\.html?$/i, container: '.framework-chart', mode: 'framework-top', tint: 'egg-tint-4' },
-    { id: 'home-hero', match: /index\.html?$/i, isDefault: true, container: '.announcements .title', mode: 'append-inline', tint: 'egg-tint-5' },
-    { id: 'annual-note', match: /download\.html?$/i, container: '.annual-note span', mode: 'append-inline', tint: 'egg-tint-1' }
+    // The address bar shows the clean URL (/contact) while the links still say
+    // "contact.html", so the page is matched by name either way.
+    { id: 'contact-card', match: /(?:^|\/)contact(?:\.html?)?\/?$/i, container: '.contact-card', mode: 'contact-card', tint: 'egg-tint-2' },
+    { id: 'membership', match: /(?:^|\/)membership(?:\.html?)?\/?$/i, container: '.footer-bottom p', mode: 'append-inline', tint: 'egg-tint-3' },
+    { id: 'framework', match: /(?:^|\/)about-framework(?:\.html?)?\/?$/i, container: '.framework-chart', mode: 'framework-top', tint: 'egg-tint-4' },
+    { id: 'home-hero', match: /(?:^|\/)index(?:\.html?)?\/?$/i, isDefault: true, container: '.announcements .title', mode: 'append-inline', tint: 'egg-tint-5' },
+    { id: 'annual-note', match: /(?:^|\/)download(?:\.html?)?\/?$/i, container: '.annual-note span', mode: 'append-inline', tint: 'egg-tint-1' }
   ];
 
   // Which hunt is live is decided by Games/game-control.js:
@@ -81,7 +83,7 @@
 
     var pageEggs = EGGS.filter(function (egg) {
       if (egg.pages === 'all') return true;
-      if (egg.isDefault && file.toLowerCase() === 'index.html') return true;
+      if (egg.isDefault && /^index(?:\.html?)?$/i.test(file)) return true;
       return Boolean(egg.match && (egg.match.test(pathname) || egg.match.test(file)));
     });
 

@@ -19,7 +19,7 @@ if (!fs.existsSync(chromePath)) {
 const root = __dirname;
 const PORT = 8137;
 const base = `http://127.0.0.1:${PORT}`;
-const PAGE = 'FRONT/index.html?welcome=0&starreset=1';
+const PAGE = 'FRONT/index.html?welcome=0&starreset=1&gamewatchdebug=1';
 
 // The deployed value of the Game Controls. Flipping this stands in for the
 // admin's one-line commit + the Vercel deploy that follows it.
@@ -37,14 +37,13 @@ app.get('/FRONT/Games/game-control.js', (req, res) => {
   );
 });
 
-// Same watcher the site ships, only faster, so the test does not sit for 20s,
-// and with its own logging switched on so the run explains itself.
+// Same watcher the site ships, only faster, so the test does not sit for 20s.
+// Its own logging is switched on by the ?gamewatchdebug=1 flag in PAGE above.
 app.get('/FRONT/Games/game-watch.js', (req, res) => {
   let src = fs.readFileSync(path.join(root, 'FRONT/Games/game-watch.js'), 'utf8');
   src = src
     .replace(/POLL_MS = \d+/, 'POLL_MS = 800')
-    .replace(/setTimeout\(check, \d+\)/, 'setTimeout(check, 300)')
-    .replace(/DEBUG = false/, 'DEBUG = true');
+    .replace(/setTimeout\(check, \d+\)/, 'setTimeout(check, 300)');
   res.type('application/javascript').send(src);
 });
 

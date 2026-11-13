@@ -249,6 +249,11 @@ const pages2026 = [
   'images/gallery/Kanlungan ni Maria/IMG_6614.JPG',
   'images/gallery/Kanlungan ni Maria/IMG_6615.JPG',
   'images/gallery/Kanlungan ni Maria/IMG_6617 (1).JPG',
+  'images/gallery/Kanlungan ni Maria/IMG_1.jpg',
+  'images/gallery/Kanlungan ni Maria/IMG_2.jpg',
+  'images/gallery/Kanlungan ni Maria/IMG_3.jpg',
+  'images/gallery/Kanlungan ni Maria/IMG_4.jpg',
+  'images/gallery/Kanlungan ni Maria/IMG_5.JPG'
 ];
 
 
@@ -2135,26 +2140,38 @@ document.addEventListener('keydown', (ev) => {
 
 // Navbar active-page highlight
 (function () {
-  const currentPage = window.location.pathname.split("/").pop() || "index.html";
+  // The site is served with clean URLs (Vercel "cleanUrls"), so the address bar
+  // shows /about-history while every link on the page still says
+  // "about-history.html". Reduce both forms to one page key, so the highlight is
+  // right whether the visitor arrived on the clean URL or on the .html one.
+  function pageKey(href) {
+    const file = String(href || "").split("/").pop();
+    if (!file || file === "." || file === ".." || /^index(?:\.html?)?$/i.test(file)) {
+      return "index";
+    }
+    return file.replace(/\.html?$/i, "");
+  }
+
+  const currentPage = pageKey(window.location.pathname);
 
   // Main navigation links
   siteNav?.querySelectorAll(":scope > a").forEach((link) => {
-    const linkPage = (link.getAttribute("href") || "").split("/").pop();
+    const linkPage = pageKey(link.getAttribute("href"));
     if (linkPage === currentPage) {
       link.classList.add("active");
     }
   });
 
   // Dropdown submenu links — also highlight the ABOUT US button
-  // Annual report pages live in reports/<year>-annual-report.html while the
-  // "Annual Report" menu item points to about-annual-report.html; treat any
+  // Annual report pages live in reports/<year>-annual-report while the
+  // "Annual Report" menu item points to about-annual-report; treat any
   // yearly report page as the Annual Report submenu item so both the submenu
   // link and the ABOUT US button stay highlighted on report pages.
-  const isAnnualReportPage = /^\d{4}-annual-report\.html$/.test(currentPage);
+  const isAnnualReportPage = /^\d{4}-annual-report$/.test(currentPage);
 
   document.querySelectorAll(".dropdown-content a").forEach((link) => {
-    const linkPage = (link.getAttribute("href") || "").split("/").pop();
-    if (linkPage === currentPage || (isAnnualReportPage && linkPage === "about-annual-report.html")) {
+    const linkPage = pageKey(link.getAttribute("href"));
+    if (linkPage === currentPage || (isAnnualReportPage && linkPage === "about-annual-report")) {
       link.classList.add("active");
       link.closest(".dropdown")?.classList.add("active");
     }
