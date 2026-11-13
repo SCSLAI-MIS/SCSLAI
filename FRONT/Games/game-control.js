@@ -4,4 +4,4 @@
 //   "star"  -> the Star hunt
 //   "heart" -> the Heart hunt
 // Anything else — empty "", "stars", "hearts" — turns BOTH hunts off.
-const ACTIVE_GAME = "";
+const ACTIVE_GAME = "https://www.facebook.com/watch/live/?ref=watch_permalink&v=3254202848101755";
