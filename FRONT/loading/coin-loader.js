@@ -43,22 +43,36 @@
 
    vercel.json sets "cleanUrls": true, so the live site answers /download.html
    with a 308 redirect to /download and the bar never shows the extension.
-   A static preview server (VS Code Live Server, any plain file server) cannot
-   do that, so the same effect is applied in the browser here: the address bar
-   is rewritten to the clean URL as soon as the page loads.
-
    This file is linked from <head> on every page, before anything is painted,
    which is why the step lives here.
 
+   LOCAL PREVIEW SERVERS: VS Code Live Server (and any plain file server) only
+   serves the real file, so the clean URL /reports/2023-annual-report answers
+   "Cannot GET /reports/2023-annual-report" — a reload of a rewritten bar was
+   landing on that 404. So the rewrite only happens where the clean URL really
+   resolves: a deployed host. On localhost / LAN addresses / file:// the bar
+   keeps its ".html" and F5 keeps working. Add ?clean=1 to force the rewrite
+   locally (useful with `node dev-serve.js`, which understands clean URLs).
+
    It does nothing when the URL is already clean, and it gives up quietly on
-   file:// pages (where the history entry may not be rewritten) — the bar then
-   simply keeps the ".html" as it always did. Relative links are unaffected:
-   "/download.html" and "/download" resolve to the same folder.
+   file:// pages (where the history entry may not be rewritten). Relative links
+   are unaffected: "/download.html" and "/download" resolve to the same folder.
    ------------------------------------------------------------------------- */
 (function hideHtmlExtension() {
     'use strict';
 
     try {
+        var host = window.location.hostname || '';
+        var isLocalPreview = !host ||
+            host === 'localhost' || host === '::1' || host === '[::1]' ||
+            /^127\./.test(host) || /^10\./.test(host) ||
+            /^192\.168\./.test(host) ||
+            /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+            /\.local$/i.test(host);
+        var forceClean = /(?:^|[?&])clean=1(?:&|$)/.test(window.location.search || '');
+
+        if (isLocalPreview && !forceClean) { return; }
+
         var path = window.location.pathname || '';
         var clean = path.replace(/\/index\.html?$/i, '/');   /* /index.html -> / */
         if (clean === path) { clean = path.replace(/\.html?$/i, ''); }

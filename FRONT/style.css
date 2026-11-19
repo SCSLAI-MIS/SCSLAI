@@ -2459,6 +2459,40 @@ nav a:hover,
     font-weight:700;
 }
 
+/* Bulleted criteria inside a report's text (e.g. the BSP dividend conditions in
+   the 2023 President's Report). The global `*` reset drops list padding, so the
+   markers would otherwise sit outside the text column. */
+.report-list{
+    margin:0 0 16px 24px;
+    padding-left:4px;
+}
+
+.report-list li{
+    margin-bottom:10px;
+    color:#384941;
+    font-size:16px;
+    line-height:1.8;
+}
+
+/* The report book shows one page at a time (script.js toggles .active on the
+   .book-page elements). On paper the whole report should come out, so every
+   page is revealed and the page-turner is dropped. */
+@media print{
+    .report-book .book-page{
+        display:block !important;
+    }
+
+    .report-controls{
+        display:none !important;
+    }
+
+    .report-book .book-page + .book-page{
+        margin-top:46px;
+        padding-top:34px;
+        border-top:3px double #164a35;
+    }
+}
+
 @media (max-width:700px){
     .report-container{
         width:calc(100% - 24px);
