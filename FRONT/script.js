@@ -2917,7 +2917,7 @@ if (reportBook) {
   const totalPageLabel = reportBook.querySelector('[data-report-total]');
   let reportPageIndex = 0;
 
-  function showReportPage(index) {
+  function showReportPage(index, scrollToTop = false) {
     reportPageIndex = Math.max(0, Math.min(index, pages.length - 1));
 
     pages.forEach((page, pageIndex) => {
@@ -2930,23 +2930,27 @@ if (reportBook) {
     if (totalPageLabel) totalPageLabel.textContent = String(pages.length);
     if (previousPageButton) previousPageButton.disabled = reportPageIndex === 0;
     if (nextPageButton) nextPageButton.disabled = reportPageIndex === pages.length - 1;
+
+    if (scrollToTop) {
+      reportBook.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
   }
 
   previousPageButton?.addEventListener('click', () => {
-    showReportPage(reportPageIndex - 1);
+    showReportPage(reportPageIndex - 1, true);
   });
 
   nextPageButton?.addEventListener('click', () => {
-    showReportPage(reportPageIndex + 1);
+    showReportPage(reportPageIndex + 1, true);
   });
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowLeft') {
-      showReportPage(reportPageIndex - 1);
+      showReportPage(reportPageIndex - 1, true);
     }
 
     if (event.key === 'ArrowRight') {
-      showReportPage(reportPageIndex + 1);
+      showReportPage(reportPageIndex + 1, true);
     }
   });
 
