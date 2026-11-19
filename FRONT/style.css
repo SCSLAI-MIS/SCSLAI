@@ -2419,48 +2419,6 @@ nav a:hover,
     text-align:center;
 }
 
-/* President's Report — opens each annual report page, above the Treasurer's Report */
-.president-report{
-    margin-top:0;
-    padding-top:0;
-}
-
-.president-report .report-header{
-    padding-bottom:18px;
-    margin-bottom:22px;
-}
-
-/* The report book shows one page at a time (script.js toggles .active on the
-   .book-page elements). On paper the whole report should come out, so every
-   page is revealed and the page-turner is dropped. */
-@media print{
-    .report-book .book-page{
-        display:block !important;
-    }
-
-    .report-controls{
-        display:none !important;
-    }
-
-    .report-book .book-page + .book-page{
-        margin-top:46px;
-        padding-top:34px;
-        border-top:3px double #164a35;
-    }
-}
-
-.report-list{
-    margin:0 0 16px 24px;
-    padding-left:4px;
-}
-
-.report-list li{
-    margin-bottom:10px;
-    color:#384941;
-    font-size:16px;
-    line-height:1.8;
-}
-
 .report-book .book-page{
     display:none;
 }
