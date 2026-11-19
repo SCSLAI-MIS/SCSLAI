@@ -2950,7 +2950,13 @@ if (reportBook) {
     }
   });
 
-  showReportPage(0);
+  // Deep links open the matching page of the book:
+  // reports/2022-annual-report.html#treasurers-report lands on page 2,
+  // #presidents-report on page 1.
+  const hashId = (window.location.hash || '').replace('#', '');
+  const hashPageIndex = hashId ? pages.findIndex((page) => page.id === hashId) : -1;
+
+  showReportPage(hashPageIndex > -1 ? hashPageIndex : 0);
 }
 
 /* SCSLAIcares Gallery Lightbox */
